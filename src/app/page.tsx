@@ -3,7 +3,7 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 
 import { Screens } from "@/app/types/Screen";
-import { OrderLine } from "@/app/types/Product"
+import { OrderLineType } from "@/app/types/Product"
 import { POSContenxtType, defaultPOSContext } from "@/app/types/POSContext";
 import { LoginScreen } from "@/app/components/screens/login";
 import { PosOrderScreen } from "@/app/components/screens/pos-order";
@@ -19,7 +19,7 @@ export default function POS() {
 	const [screen, setScreen] = useState<Screens>("login");
 	const [username, setUserName] = useState("");
 	const [password, setPassword] = useState("");
-	const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
+	const [orderLines, setOrderLines] = useState<OrderLineType[]>([]);
 	const [selectedLine, setSelectedLine] = useState<number | null>(null);
 	const [products, setProducts] = useState<any[]>([]);
 

@@ -19,7 +19,7 @@ export function LoginScreen({onLogin}: LoginPropsType){
   const {username, password, setUserName, setPassword} = usePos();
     return (
         <form className="h-screen flex items-center justify-center">
-          <div className="p-8 rounded-xl shadow-xl space-y-4">
+          <div className="p-8 rounded-lg shadow-xl space-y-4">
             <h1 className="text-xl font-bold text-center">Cashier Login Toko ABC</h1>
             <input
               value={username}

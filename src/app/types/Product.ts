@@ -1,4 +1,4 @@
-export interface Product {
+export interface ProductType {
     id: number;
     name: string;
     title: string;
@@ -9,7 +9,7 @@ export interface Product {
     category?: string;
 }
 
-export interface OrderLine extends Product {
+export interface OrderLineType extends ProductType {
     qty: number;
     discount: number;
 }

@@ -6,7 +6,7 @@ export function Card({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`rounded-xl p-1 bg-white shadow-lg ${className}`} {...props}>{children}</div>
+    <div className={`rounded-md p-1 bg-white shadow-lg hover:shadow-blue-500 ${className}`} {...props}>{children}</div>
   );
 }
 
