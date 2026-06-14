@@ -1,4 +1,14 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js POS System
+
+This is a Point of Sale (POS) application built with [Next.js](https://nextjs.org), TypeScript, and TailwindCSS. It features a mocked backend using `localStorage` for demonstration purposes.
+
+## Features
+
+*   **Role-Based Access Control (RBAC)**: Distinct flows for Admins, Managers, and Cashiers.
+*   **Admin Dashboard**: Manage Products and Users.
+*   **Manager Dashboard**: Overview of shop configuration.
+*   **POS Interface**: Dedicated cashier interface (restricted access).
+*   **Mock Backend**: Data persistence via browser `localStorage`.
 
 ## Getting Started
 
@@ -8,29 +18,31 @@ First, run the development server:
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Login Credentials
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The application comes pre-loaded with the following users (Password is same as username):
 
-## Learn More
+| Role | Username | Password | Access |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin` | `admin` | Full access to Backoffice (Products, Users) |
+| **Manager** | `manager` | `manager` | Access to Shop Manager Dashboard |
+| **Cashier** | `cashier` | `cashier` | Access to POS Frontend |
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+*   **Frontend**: Next.js 16 (App Router), React 19, TailwindCSS 4.
+*   **State/Storage**: Custom `StorageService` using `localStorage` to simulate a REST API.
+*   **Authentication**: `AuthService` handles session management and redirection.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+*   `src/app/admin`: Backoffice pages for Admin.
+*   `src/app/manager`: Backoffice pages for Shop Managers.
+*   `src/app/pos`: Cashier POS interface.
+*   `src/services`: Core services for Storage and Auth.
+*   `src/models`: TypeScript interfaces for domain entities.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

@@ -1,8 +1,5 @@
-import React from "react";
+import React from 'react';
 
-
-export function SummaryScreen(){
-    return (
-        <></>
-    )
+export function SummaryScreen() {
+  return <></>;
 }
