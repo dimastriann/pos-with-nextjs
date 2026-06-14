@@ -24,6 +24,7 @@ export interface PosOrderLine {
   productName: string; // denormalized for easier display
   qty: number;
   price: number;
+  discount: number; // percentage (0-100)
   subtotal: number;
 }
 
@@ -44,7 +45,7 @@ export interface PosOrder {
   customerName?: string;
   date: string;
   totalAmount: number;
-  status: 'Draft' | 'Paid' | 'Cancelled';
+  status: 'Draft' | 'Paid' | 'Cancelled' | 'Refunded';
   lines?: PosOrderLine[]; // Optional for list view, required for form
   payments?: PosPayment[]; // Optional for list view
 }

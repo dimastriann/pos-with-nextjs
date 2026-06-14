@@ -1,0 +1,15 @@
+export const RESOURCE_KEYS = {
+  USERS: 'pos_users',
+  PRODUCTS: 'pos_products',
+  CURRENT_USER: 'pos_current_user',
+  CATEGORIES: 'pos_categories',
+  UOM: 'pos_uom',
+  CONTACTS: 'pos_contacts',
+  PAYMENT_METHODS: 'pos_payment_methods',
+  WAREHOUSES: 'pos_warehouses',
+  SHOPS: 'pos_data_shops',
+  SESSIONS: 'pos_data_sessions',
+  ORDERS: 'pos_data_orders',
+  ORDER_LINES: 'pos_data_order_lines',
+  PAYMENTS: 'pos_data_payments',
+} as const;

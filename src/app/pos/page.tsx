@@ -1,24 +1,13 @@
 'use client';
-
+import { usePOS } from '@/lib/context/POSContextStore';
 import { PosOrderScreen } from '@/components/pos/PosOrderScreen';
+import { PaymentScreen } from '@/components/pos/PaymentScreen';
+import { ReceiptScreen } from '@/components/pos/ReceiptScreen';
 
 export default function POSPage() {
-  return (
-    <div className="flex flex-1 overflow-hidden">
-      {/* Left: Products */}
-      <div className="w-auto flex flex-col border-r">
-        <PosOrderScreen />
-      </div>
+  const { state } = usePOS();
 
-      {/* Right: Order + Controls */}
-      {/* <div className="w-2/5 flex flex-col"> */}
-      {/* <CustomerButton />
-        <OrderLines />
-        <div className="flex">
-          <Numpad />
-          <PaymentSection />
-        </div> */}
-      {/* </div> */}
-    </div>
-  );
+  if (state.currentScreen === 'payment') return <PaymentScreen />;
+  if (state.currentScreen === 'receipt') return <ReceiptScreen />;
+  return <PosOrderScreen />;
 }

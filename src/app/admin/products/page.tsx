@@ -1,29 +1,37 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Product } from '@/models/Product';
-import { storageService, STORAGE_KEYS } from '@/services/storage';
+import { productRepository } from '@/repositories/productRepository';
+import { categoryRepository } from '@/repositories/categoryRepository';
+import { Category } from '@/models/MasterData';
 import { DataTable } from '@/components/admin/DataTable';
 import { Modal } from '@/components/admin/Modal';
 import { PageHeader } from '@/components/admin/PageHeader';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    loadProducts();
+    loadData();
   }, []);
 
-  const loadProducts = () => {
-    const items = storageService.getAll<Product>(STORAGE_KEYS.PRODUCTS);
+  const loadData = async () => {
+    const [items, cats] = await Promise.all([
+      productRepository.getAll(),
+      categoryRepository.getAll(),
+    ]);
     setProducts(items);
+    setCategories(cats);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure?')) {
-      storageService.remove(STORAGE_KEYS.PRODUCTS, id);
-      loadProducts();
+      await productRepository.delete(id);
+      loadData();
     }
   };
 
@@ -33,33 +41,34 @@ export default function ProductsPage() {
   };
 
   const handleAddNew = () => {
-    setCurrentProduct({});
+    setCurrentProduct({ stock: 0 });
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentProduct.id) {
-      storageService.update(STORAGE_KEYS.PRODUCTS, currentProduct as Product);
-    } else {
-      const newProduct = {
-        ...currentProduct,
-        id: Date.now().toString(),
-      } as Product;
-      storageService.add(STORAGE_KEYS.PRODUCTS, newProduct);
+    setIsLoading(true);
+    try {
+      if (currentProduct.id) {
+        await productRepository.update(currentProduct as Product);
+      } else {
+        const { id: _, ...data } = currentProduct as Product;
+        await productRepository.create(data);
+      }
+      setIsModalOpen(false);
+      loadData();
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsModalOpen(false);
-    loadProducts();
   };
 
   const columns = [
-    {
-      header: 'Name',
-      accessor: 'name' as keyof Product,
-      className: 'font-medium text-gray-900',
-    },
-    { header: 'Price', accessor: (p: Product) => `$${p.price.toFixed(2)}` },
+    { header: 'Name', accessor: 'name' as keyof Product, className: 'font-medium text-gray-900' },
+    { header: 'Price', accessor: (p: Product) => `Rp ${p.price.toLocaleString()}` },
     { header: 'Stock', accessor: 'stock' as keyof Product },
+    { header: 'Category', accessor: (p: Product) => categories.find(c => c.id === p.categoryId)?.name || '-' },
   ];
 
   return (
@@ -75,88 +84,69 @@ export default function ProductsPage() {
         columns={columns}
         actions={(item) => (
           <>
-            <button
-              onClick={() => handleEdit(item)}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => handleDelete(item.id)}
-              className="text-red-500 hover:text-red-700 text-sm font-medium"
-            >
-              Delete
-            </button>
+            <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+            <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
           </>
         )}
       />
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={currentProduct.id ? 'Edit Product' : 'New Product'}
-      >
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentProduct.id ? 'Edit Product' : 'New Product'}>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               value={currentProduct.name || ''}
-              onChange={(e) =>
-                setCurrentProduct({ ...currentProduct, name: e.target.value })
-              }
-              required
+              onChange={(e) => setCurrentProduct({ ...currentProduct, name: e.target.value })}
+              placeholder="e.g. Mineral Water"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Price (Rp)</label>
             <input
               type="number"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
+              required
+              min={0}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               value={currentProduct.price || ''}
-              onChange={(e) =>
-                setCurrentProduct({
-                  ...currentProduct,
-                  price: Number(e.target.value),
-                })
-              }
-              required
+              onChange={(e) => setCurrentProduct({ ...currentProduct, price: Number(e.target.value) })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Stock
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
             <input
               type="number"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
-              value={currentProduct.stock || ''}
-              onChange={(e) =>
-                setCurrentProduct({
-                  ...currentProduct,
-                  stock: Number(e.target.value),
-                })
-              }
               required
+              min={0}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              value={currentProduct.stock ?? ''}
+              onChange={(e) => setCurrentProduct({ ...currentProduct, stock: Number(e.target.value) })}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+              value={currentProduct.categoryId || ''}
+              onChange={(e) => setCurrentProduct({ ...currentProduct, categoryId: e.target.value })}
+            >
+              <option value="">— None —</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none h-20 resize-none"
+              value={currentProduct.description || ''}
+              onChange={(e) => setCurrentProduct({ ...currentProduct, description: e.target.value })}
             />
           </div>
           <div className="flex gap-3 justify-end pt-4">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
-            >
-              Save Product
+            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">Cancel</button>
+            <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50">
+              {isLoading ? 'Saving...' : 'Save Product'}
             </button>
           </div>
         </form>

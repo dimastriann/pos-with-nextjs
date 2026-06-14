@@ -1,152 +1,170 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/pos/ProductCard';
 import { Button } from '@/components/pos/ControlButton';
-import { NumpadType } from '@/types/NumpadType';
-import { Product } from '@/types/Product';
-import { OrderLine as OrderLineType } from '@/types/Order';
 import Numpad from '@/components/pos/Numpad';
-import { OrderLine } from '@/components/order/orderline';
-import { products } from '@/lib/data/Product';
+import { usePOS } from '@/lib/context/POSContextStore';
+import { productRepository } from '@/repositories/productRepository';
+import { categoryRepository } from '@/repositories/categoryRepository';
+import { Product } from '@/models/Product';
+import { Category } from '@/models/MasterData';
+import { computeCartTotal } from '@/lib/utils/cartCalculations';
 
 export function PosOrderScreen() {
-  const [orderLines, setOrderLines] = useState<OrderLineType[]>([]);
-  const [selectedLine, setSelectedLine] = useState<number | null>(null);
-  const [numpadMode, setNumpadMode] = useState<NumpadType>('qty');
-  const [inputValue, setInputValue] = useState<string>('');
+  const { state, dispatch } = usePOS();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategoryId, setActiveCategoryId] = useState<string>('all');
+  const [search, setSearch] = useState('');
 
-  const addProduct = (product: Product) => {
-    console.log('add');
-    setOrderLines((prev: OrderLineType[]) => {
-      console.log('prev', prev);
-      const existing = prev.find((line) => line.id === product.id);
-      if (existing) {
-        return prev.map((line) =>
-          line.id === product.id ? { ...line, qty: line.qty + 1 } : line,
-        );
-      }
-      console.log('ret', [...prev, { ...product, qty: 1, discount: 0 }]);
-      return [...prev, { ...product, qty: 1, discount: 0 }];
-    });
-  };
+  useEffect(() => {
+    Promise.all([productRepository.getAll(), categoryRepository.getAll()]).then(
+      ([prods, cats]) => {
+        setProducts(prods);
+        setCategories(cats);
+      },
+    );
+  }, []);
 
-  const deleteLine = (line: OrderLineType) => {
-    console.info(arguments, line);
-    setOrderLines((orderLine: OrderLineType[]) => {
-      return orderLine.filter((l) => l.id !== line.id);
-    });
-  };
+  const filteredProducts = products.filter((p) => {
+    const matchCat = activeCategoryId === 'all' || p.categoryId === activeCategoryId;
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
 
-  //   const applyNumpadValue = () => {
-  //     if (selectedLine === null) return;
-  //     const value = parseFloat(inputValue);
-  //     if (isNaN(value)) return;
-  //     setOrderLines((prev) =>
-  //       prev.map((line, idx) =>
-  //         idx === selectedLine ? { ...line, [numpadMode]: value } : line
-  //       )
-  //     );
-  //     setInputValue("");
-  //   };
-
-  const handleNumpadPress = (char: string) => {
-    if (char === 'clear') {
-      setInputValue('');
-    } else if (char === 'del') {
-      setInputValue((prev) => prev.slice(0, -1));
-    } else {
-      setInputValue((prev) => prev + char);
-    }
-  };
+  const total = computeCartTotal(state.cartLines);
 
   return (
-    <div className="p-4 grid grid-cols-12 gap-4 h-screen">
-      <div className="col-span-7 overflow-y-auto">
-        <h2 className="text-xl font-bold mb-2">Products</h2>
-        <div className="grid grid-cols-3 gap-2">
-          {products.map((product) => (
+    <div className="p-3 grid grid-cols-12 gap-3 flex-1 overflow-hidden">
+      {/* Product grid */}
+      <div className="col-span-7 flex flex-col overflow-hidden">
+        {/* Search */}
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search products..."
+          className="mb-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+        />
+
+        {/* Category tabs */}
+        <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => setActiveCategoryId('all')}
+            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${activeCategoryId === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          >
+            All
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setActiveCategoryId(c.id)}
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${activeCategoryId === c.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Products */}
+        <div className="grid grid-cols-3 gap-2 overflow-y-auto flex-1">
+          {filteredProducts.map((product) => (
             <Card
               key={product.id}
-              className="cursor-pointer"
-              onClick={() => addProduct(product)}
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => dispatch({ type: 'ADD_PRODUCT', product })}
             >
-              <CardContent className="p-2">
-                <p className="font-semibold">{product.title}</p>
-                <p className="text-sm">${product.price}</p>
+              <CardContent className="p-3">
+                <p className="font-semibold text-sm leading-tight">{product.name}</p>
+                <p className="text-blue-600 font-bold text-sm mt-1">Rp {product.price.toLocaleString()}</p>
+                {product.stock <= 5 && product.stock > 0 && (
+                  <p className="text-orange-500 text-xs mt-0.5">Low stock: {product.stock}</p>
+                )}
+                {product.stock === 0 && <p className="text-red-500 text-xs mt-0.5">Out of stock</p>}
               </CardContent>
             </Card>
           ))}
-        </div>
-      </div>
-      <div className="control-button col-span-1 overflow-x-auto">
-        <div className="grid grid-cols-1 gap-2">
-          <Button className="uppercase" onClick={() => alert('control button')}>
-            Refund
-          </Button>
-          <Button className="uppercase" onClick={() => alert('control button')}>
-            Customer Note
-          </Button>
-          <Button className="uppercase" onClick={() => alert('control button')}>
-            Enter Code
-          </Button>
-          <Button className="uppercase" onClick={() => alert('control button')}>
-            Discount %
-          </Button>
-          <Button className="uppercase" onClick={() => alert('control button')}>
-            Discount Rp
-          </Button>
+          {filteredProducts.length === 0 && (
+            <div className="col-span-3 text-center py-12 text-gray-400 text-sm">No products found</div>
+          )}
         </div>
       </div>
 
-      <div className="col-span-4 border-l pl-4 flex flex-col justify-between">
-        <div>
-          <h2 className="text-xl font-bold mb-2 text-center border-1 p-1 rounded-lg bg-blue-500 text-white cursor-pointer">
-            Customer A
-          </h2>
-          <div className="space-y-2 overflow-y-auto max-h-96">
-            {orderLines.map((line, index) => (
-              <OrderLine
-                key={line.id}
-                onClick={() => setSelectedLine(index)}
-                className={`cursor-pointer relative ${selectedLine === index ? 'border-blue-500 border-2' : ''}`}
-              >
-                <div className="p-2 flex justify-between items-center relative">
-                  <div>
-                    <p className="font-semibold">{line.product_name}</p>
-                    <p className="text-sm">
-                      Qty: {line.qty}, Price: ${line.price}, Discount:{' '}
-                      {line.discount}%
-                    </p>
-                  </div>
-                  <p className="font-bold">
-                    $
-                    {(
-                      line.price *
-                      line.qty *
-                      (1 - line?.discount / 100)
-                    ).toFixed(2)}
+      {/* Control buttons */}
+      <div className="col-span-1 flex flex-col gap-1.5 pt-8">
+        <Button className="uppercase text-xs" variant="outline" onClick={() => dispatch({ type: 'CLEAR_ORDER' })}>
+          Clear
+        </Button>
+        <Button className="uppercase text-xs" variant="outline" onClick={() => alert('Customer note coming soon')}>
+          Note
+        </Button>
+        <Button className="uppercase text-xs" variant="outline" onClick={() => alert('Discount coming soon')}>
+          Disc %
+        </Button>
+      </div>
+
+      {/* Order panel */}
+      <div className="col-span-4 border-l pl-3 flex flex-col overflow-hidden">
+        {/* Customer */}
+        <button
+          onClick={() => alert('Customer lookup coming soon')}
+          className="text-sm font-bold text-center p-2 rounded-lg bg-blue-500 text-white mb-2 hover:bg-blue-600 transition-colors"
+        >
+          {state.customer ? state.customer.name : '+ Add Customer'}
+        </button>
+
+        {/* Order lines */}
+        <div className="flex-1 overflow-y-auto space-y-1 mb-2">
+          {state.cartLines.length === 0 && (
+            <p className="text-center text-gray-400 text-sm py-8">Cart is empty</p>
+          )}
+          {state.cartLines.map((line, index) => (
+            <div
+              key={`${line.productId}-${index}`}
+              onClick={() => dispatch({ type: 'SELECT_LINE', index })}
+              className={`relative p-2 rounded-lg border cursor-pointer transition-colors ${
+                state.selectedLineIndex === index
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <div className="flex justify-between items-start pr-5">
+                <div>
+                  <p className="font-semibold text-sm leading-tight">{line.productName}</p>
+                  <p className="text-xs text-gray-500">
+                    {line.qty} × Rp {line.price.toLocaleString()}
+                    {line.discount > 0 && ` − ${line.discount}%`}
                   </p>
-                  {/* <div className="absolute top-0 right-4 mb-2"><i>x</i></div> */}
                 </div>
-                <div
-                  className="absolute top-0 right-4"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    deleteLine(line);
-                  }}
-                >
-                  x
-                </div>
-              </OrderLine>
-            ))}
+                <p className="font-bold text-sm">Rp {line.subtotal.toLocaleString()}</p>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); dispatch({ type: 'REMOVE_LINE', index }); }}
+                className="absolute top-1 right-2 text-gray-400 hover:text-red-500 font-bold text-sm"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Total */}
+        <div className="border-t pt-2 mb-1">
+          <div className="flex justify-between items-center font-bold text-base">
+            <span>Total</span>
+            <span className="text-blue-700">Rp {total.toLocaleString()}</span>
           </div>
         </div>
 
-        {!!orderLines.length && (
-          <div className="">
-            <Numpad />
-          </div>
-        )}
+        {/* Numpad */}
+        <Numpad
+          mode={state.numpadMode}
+          inputValue={state.numpadInput}
+          onPress={(char) => dispatch({ type: 'NUMPAD_PRESS', char })}
+          onModeChange={(mode) => dispatch({ type: 'SET_NUMPAD_MODE', mode })}
+          onPayment={() => dispatch({ type: 'GOTO_PAYMENT' })}
+          canPay={state.cartLines.length > 0}
+        />
       </div>
     </div>
   );

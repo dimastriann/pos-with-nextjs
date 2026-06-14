@@ -3,6 +3,9 @@ export interface Product {
   name: string;
   price: number;
   stock: number;
-  category?: string;
+  categoryId?: string;
+  uomId?: string;
+  description?: string;
   image?: string;
+  barcode?: string;
 }

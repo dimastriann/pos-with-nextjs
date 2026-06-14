@@ -1,65 +1,69 @@
+'use client';
 import React from 'react';
+import { NumpadMode } from '@/types/POSContext';
 
-export default function Numpad({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+interface NumpadProps {
+  mode: NumpadMode;
+  inputValue: string;
+  onPress: (char: string) => void;
+  onModeChange: (mode: NumpadMode) => void;
+  onPayment: () => void;
+  canPay: boolean;
+}
+
+const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '+/-', '0', '.'];
+
+export default function Numpad({ mode, inputValue, onPress, onModeChange, onPayment, canPay }: NumpadProps) {
   return (
-    <div className={`p-2 ${className}`} {...props}>
-      <div className="grid grid-cols-4 gap-2 numpad-button">
-        {[
-          '1',
-          '2',
-          '3',
-          'qty',
-          '4',
-          '5',
-          '6',
-          'disc',
-          '7',
-          '8',
-          '9',
-          'price',
-          '+/-',
-          '0',
-          '.',
-          'del',
-        ].map((char, idx) => (
-          // <Button
-          //     key={idx}
-          //     className={`${char === numpadMode ? "bg-blue-500 text-white active" : ""}`}
-          //     onClick={() => {
-          //         if (["qty", "price", "disc"].includes(char)) {
-          //             setNumpadMode(char as any);
-          //         } else if (char === "del") {
-          //             handleNumpadPress("del");
-          //         } else if (char === "+/-") {
-          //             setInputValue((prev) => (prev.startsWith("-") ? prev.slice(1) : "-" + prev));
-          //         } else {
-          //             handleNumpadPress(char);
-          //         }
-          //     }}
-          // >
-          //     {char.toUpperCase()}
-          // </Button>
+    <div className="p-2 select-none">
+      {/* Mode selector */}
+      <div className="grid grid-cols-3 gap-1 mb-2">
+        {(['qty', 'disc', 'price'] as NumpadMode[]).map((m) => (
           <button
-            key={idx}
-            className="px-2 py-2 rounded-lg font-semibold text-sm cursor-pointer bg-blue-600 text-white hover:bg-blue-700 uppercase"
-            onClick={() => console.info(char)}
+            key={m}
+            onClick={() => onModeChange(m)}
+            className={`py-1.5 rounded text-xs font-bold uppercase transition-colors ${
+              mode === m ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {m === 'disc' ? 'Disc %' : m}
+          </button>
+        ))}
+      </div>
+
+      {/* Input display */}
+      <div className="bg-gray-100 rounded-lg px-3 py-2 text-right font-mono text-lg font-bold text-gray-800 mb-2 min-h-[40px]">
+        {inputValue || '0'}
+      </div>
+
+      {/* Digit grid */}
+      <div className="grid grid-cols-3 gap-1 mb-1">
+        {DIGITS.map((char) => (
+          <button
+            key={char}
+            onClick={() => onPress(char)}
+            className="py-3 rounded-lg font-semibold text-sm bg-white border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
           >
             {char}
           </button>
         ))}
-        <div className="col-span-4">
-          <div className="flex items-center justify-between mt-2">
-            <button
-              className="mt-4 px-4 py-2 w-full cursor-pointer bg-blue-600 rounded-lg font-semibold text-sm text-white hover:bg-blue-700 uppercase"
-              // onClick={() => setScreen('payment')}
-            >
-              Payment
-            </button>
-          </div>
-        </div>
+      </div>
+
+      {/* Delete + Payment */}
+      <div className="grid grid-cols-3 gap-1 mt-1">
+        <button
+          onClick={() => onPress('del')}
+          className="col-span-1 py-3 rounded-lg font-semibold text-sm bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors"
+        >
+          ⌫
+        </button>
+        <button
+          onClick={onPayment}
+          disabled={!canPay}
+          className="col-span-2 py-3 rounded-lg font-bold text-sm bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          Payment
+        </button>
       </div>
     </div>
   );

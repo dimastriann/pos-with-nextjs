@@ -1,30 +1,30 @@
-import { createContext, useContext } from 'react';
+'use client';
+import { createContext, useContext, useReducer, useEffect, Dispatch } from 'react';
+import { POSState, POSAction } from '@/types/POSContext';
+import { posReducer, initialPOSState } from './posReducer';
+import { paymentMethodRepository } from '@/repositories/paymentMethodRepository';
 
-import { POSContextState, defaultPOSContext } from '@/types/POSContext';
+interface POSContextValue {
+  state: POSState;
+  dispatch: Dispatch<POSAction>;
+}
 
-const POSContext = createContext<POSContextState | undefined>(undefined);
-export const usePos = () => useContext(POSContext);
+const POSContext = createContext<POSContextValue | null>(null);
 
-export default function POS_Provider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const store = {
-    currentOrder: {},
-    currentOrderLine: [],
-    customer: {},
-    addProduct: () => undefined,
-    updateQty: () => undefined,
-    removeLine: () => undefined,
-    setCustomer: () => undefined,
-    clearOrder: () => undefined,
-    getTotal: () => 0,
-    OrderList: [],
-  };
-  return (
-    <>
-      <POSContext.Provider value={store}>{children}</POSContext.Provider>
-    </>
-  );
+export function POSProvider({ children }: { children: React.ReactNode }) {
+  const [state, dispatch] = useReducer(posReducer, initialPOSState);
+
+  useEffect(() => {
+    paymentMethodRepository.getAll().then((methods) => {
+      dispatch({ type: 'SET_PAYMENT_METHODS', methods });
+    });
+  }, []);
+
+  return <POSContext.Provider value={{ state, dispatch }}>{children}</POSContext.Provider>;
+}
+
+export function usePOS(): POSContextValue {
+  const ctx = useContext(POSContext);
+  if (!ctx) throw new Error('usePOS must be used within POSProvider');
+  return ctx;
 }
