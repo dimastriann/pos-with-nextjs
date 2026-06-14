@@ -1,3 +1,6 @@
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
 interface PageHeaderProps {
   title: string;
   description?: string;
@@ -9,23 +12,18 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
-    <div className="flex justify-between items-end mb-8">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6 md:mb-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-          {title}
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">{title}</h1>
         {description && (
-          <p className="text-sm text-gray-500 mt-1">{description}</p>
+          <p className="text-sm text-muted-foreground mt-1">{description}</p>
         )}
       </div>
       {action && (
-        <button
-          onClick={action.onClick}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors text-sm flex items-center gap-2"
-        >
-          <span>＋</span>
+        <Button onClick={action.onClick} size="sm">
+          <Plus className="h-4 w-4 mr-1" />
           {action.label}
-        </button>
+        </Button>
       )}
     </div>
   );

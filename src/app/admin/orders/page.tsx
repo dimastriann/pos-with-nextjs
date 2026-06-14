@@ -5,6 +5,7 @@ import { orderRepository } from '@/repositories/orderRepository';
 import { DataTable } from '@/components/admin/DataTable';
 import { Modal } from '@/components/admin/Modal';
 import { PageHeader } from '@/components/admin/PageHeader';
+import { Button } from '@/components/ui/button';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<PosOrder[]>([]);
@@ -47,7 +48,7 @@ export default function OrdersPage() {
     <div>
       <PageHeader title="Orders" description="View and manage sales orders." />
       <DataTable data={orders} columns={columns} actions={(item) => (
-        <button onClick={() => handleView(item)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">View Details</button>
+        <Button variant="link" size="sm" className="text-primary" onClick={() => handleView(item)}>View Details</Button>
       )} />
 
       {selectedOrder && (
@@ -91,7 +92,7 @@ export default function OrdersPage() {
               </table>
             </div>
             <div className="flex justify-end pt-4">
-              <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">Close</button>
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Close</Button>
             </div>
           </div>
         </Modal>

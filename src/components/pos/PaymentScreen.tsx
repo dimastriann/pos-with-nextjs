@@ -1,9 +1,12 @@
 'use client';
 import React, { useState } from 'react';
+import { X } from 'lucide-react';
 import { usePOS } from '@/lib/context/POSContextStore';
 import { processPayment } from '@/lib/context/posThunks';
 import { computeCartTotal, computeChange } from '@/lib/utils/cartCalculations';
 import { ActivePayment } from '@/models/CartModels';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const PaymentScreen = () => {
   const { state, dispatch } = usePOS();
@@ -32,112 +35,139 @@ export const PaymentScreen = () => {
     setNumInput((p) => p + char);
   };
 
+  const DIGITS = ['1','2','3','4','5','6','7','8','9','+/-','0','.'];
+
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 gap-4">
       {/* Left: Order summary */}
-      <div className="flex-1 bg-white rounded-xl border border-gray-200 p-4 flex flex-col">
-        <h2 className="text-lg font-bold text-gray-800 mb-3">Order Summary</h2>
-        <div className="flex-1 overflow-y-auto space-y-1 mb-4">
-          {state.cartLines.map((line, i) => (
-            <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100">
-              <span>{line.productName} × {line.qty}{line.discount > 0 && ` (−${line.discount}%)`}</span>
-              <span className="font-medium">Rp {line.subtotal.toLocaleString()}</span>
-            </div>
-          ))}
-        </div>
-        <div className="border-t pt-3 space-y-1">
-          <div className="flex justify-between font-bold text-base">
-            <span>Total</span>
-            <span className="text-blue-700">Rp {total.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between text-sm text-gray-500">
-            <span>Paid</span>
-            <span className="text-green-600 font-medium">Rp {amountPaid.toLocaleString()}</span>
-          </div>
-          {change > 0 ? (
-            <div className="flex justify-between text-sm font-bold text-green-700 bg-green-50 rounded px-2 py-1">
-              <span>Change</span>
-              <span>Rp {change.toLocaleString()}</span>
-            </div>
-          ) : (
-            <div className="flex justify-between text-sm text-red-500">
-              <span>Remaining</span>
-              <span>Rp {remaining.toLocaleString()}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Payment lines */}
-        {state.paymentLines.length > 0 && (
-          <div className="mt-4">
-            <p className="text-xs font-bold text-gray-500 uppercase mb-1">Payments</p>
-            {state.paymentLines.map((p, i) => (
-              <div key={i} className="flex justify-between items-center text-sm py-0.5">
-                <span>{p.methodName}</span>
-                <div className="flex items-center gap-2">
-                  <span>Rp {p.amount.toLocaleString()}</span>
-                  <button onClick={() => dispatch({ type: 'REMOVE_PAYMENT', index: i })} className="text-red-400 hover:text-red-600 text-xs">×</button>
-                </div>
+      <Card className="flex-1 flex flex-col overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Order Summary</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col overflow-hidden p-4 pt-0">
+          <div className="flex-1 overflow-y-auto space-y-1 mb-4">
+            {state.cartLines.map((line, i) => (
+              <div key={i} className="flex justify-between text-sm py-1.5 border-b border-border">
+                <span className="text-foreground">
+                  {line.productName} × {line.qty}
+                  {line.discount > 0 && <span className="text-muted-foreground"> (−{line.discount}%)</span>}
+                </span>
+                <span className="font-medium">Rp {line.subtotal.toLocaleString()}</span>
               </div>
             ))}
           </div>
-        )}
-      </div>
+
+          <div className="border-t border-border pt-3 space-y-1.5">
+            <div className="flex justify-between font-bold text-base">
+              <span>Total</span>
+              <span className="text-primary">Rp {total.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Paid</span>
+              <span className="text-green-600 dark:text-green-400 font-medium">Rp {amountPaid.toLocaleString()}</span>
+            </div>
+            {change > 0 ? (
+              <div className="flex justify-between text-sm font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 rounded px-2 py-1.5">
+                <span>Change</span>
+                <span>Rp {change.toLocaleString()}</span>
+              </div>
+            ) : remaining > 0 ? (
+              <div className="flex justify-between text-sm text-destructive bg-destructive/5 rounded px-2 py-1.5">
+                <span>Remaining</span>
+                <span>Rp {remaining.toLocaleString()}</span>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Payment lines */}
+          {state.paymentLines.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Payments Applied</p>
+              {state.paymentLines.map((p, i) => (
+                <div key={i} className="flex justify-between items-center text-sm py-1">
+                  <span>{p.methodName}</span>
+                  <div className="flex items-center gap-2">
+                    <span>Rp {p.amount.toLocaleString()}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                      onClick={() => dispatch({ type: 'REMOVE_PAYMENT', index: i })}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Right: Payment input */}
       <div className="flex flex-col gap-3 w-full md:w-72">
         {/* Method selector */}
-        <div className="bg-white rounded-xl border border-gray-200 p-3">
-          <p className="text-xs font-bold text-gray-500 uppercase mb-2">Payment Method</p>
-          <div className="grid grid-cols-1 gap-1.5">
-            {state.availablePaymentMethods.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setSelectedMethodId(m.id)}
-                className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors text-left ${
-                  selectedMethodId === m.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-200 hover:border-blue-300'
-                }`}
-              >
-                {m.name}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Card>
+          <CardContent className="p-3">
+            <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Payment Method</p>
+            <div className="grid grid-cols-1 gap-1.5">
+              {state.availablePaymentMethods.map((m) => (
+                <Button
+                  key={m.id}
+                  variant={selectedMethodId === m.id ? 'default' : 'outline'}
+                  className="w-full justify-start"
+                  onClick={() => setSelectedMethodId(m.id)}
+                >
+                  {m.name}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Amount input */}
-        <div className="bg-white rounded-xl border border-gray-200 p-3">
-          <p className="text-xs font-bold text-gray-500 uppercase mb-2">Amount</p>
-          <div className="bg-gray-100 rounded-lg px-3 py-2 text-right font-mono text-lg font-bold text-gray-800 mb-2">
-            {numInput || `Rp ${remaining.toLocaleString()}`}
-          </div>
-          <div className="grid grid-cols-3 gap-1 mb-1">
-            {['1','2','3','4','5','6','7','8','9','+/-','0','.'].map((c) => (
-              <button key={c} onClick={() => handleNumPress(c)} className="py-2.5 rounded text-sm font-medium bg-white border border-gray-200 hover:bg-gray-50 transition-colors">{c}</button>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 gap-1 mt-1">
-            <button onClick={() => handleNumPress('del')} className="py-2.5 rounded text-sm font-medium bg-red-50 border border-red-200 text-red-600 hover:bg-red-100">⌫</button>
-            <button onClick={handleAddPayment} disabled={!selectedMethodId} className="py-2.5 rounded text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40">Add</button>
-          </div>
-        </div>
+        {/* Amount numpad */}
+        <Card>
+          <CardContent className="p-3">
+            <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Amount</p>
+            <div className="bg-muted rounded-lg px-3 py-2 text-right font-mono text-lg font-bold text-foreground mb-2 min-h-[44px]">
+              {numInput || `Rp ${remaining.toLocaleString()}`}
+            </div>
+            <div className="grid grid-cols-3 gap-1 mb-1">
+              {DIGITS.map((c) => (
+                <Button key={c} variant="outline" onClick={() => handleNumPress(c)} className="h-10 text-sm font-medium">
+                  {c}
+                </Button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-1 mt-1">
+              <Button variant="outline" onClick={() => handleNumPress('del')} className="h-10 text-destructive border-destructive/30 hover:bg-destructive/10">
+                ⌫
+              </Button>
+              <Button onClick={handleAddPayment} disabled={!selectedMethodId} className="h-10">
+                Add
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Actions */}
-        <button
+        <Button
           onClick={() => processPayment(state, dispatch)}
           disabled={!canPay || state.isLoading}
-          className="w-full py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700 text-white"
         >
           {state.isLoading ? 'Processing...' : 'Pay & Print Receipt'}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
           onClick={() => dispatch({ type: 'GOTO_ORDER' })}
-          className="w-full py-2.5 rounded-xl font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+          className="w-full"
         >
           Back to Order
-        </button>
+        </Button>
 
         {state.error && (
-          <p className="text-red-500 text-sm text-center bg-red-50 rounded-lg p-2">{state.error}</p>
+          <p className="text-destructive text-sm text-center bg-destructive/10 rounded-lg p-2">{state.error}</p>
         )}
       </div>
     </div>

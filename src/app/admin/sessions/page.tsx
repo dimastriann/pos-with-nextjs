@@ -13,7 +13,7 @@ export default function SessionsPage() {
   const loadData = async () => setData(await sessionRepository.getAll());
 
   const columns = [
-    { header: 'ID', accessor: 'id' as keyof PosSession, className: 'font-mono text-xs text-gray-500' },
+    { header: 'ID', accessor: 'id' as keyof PosSession, className: 'font-mono text-xs text-muted-foreground' },
     { header: 'Shop ID', accessor: 'shopId' as keyof PosSession },
     { header: 'User ID', accessor: 'userId' as keyof PosSession },
     { header: 'Start Time', accessor: (s: PosSession) => new Date(s.startAt).toLocaleString() },

@@ -1,9 +1,13 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/pos/ControlButton';
+import { motion } from 'motion/react';
 import { adapter } from '@/adapters';
 import { UserRole } from '@/models/User';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function LoginPage() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -44,54 +48,61 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <form className="h-screen flex items-center justify-center" onSubmit={handleLogin}>
-        <div className="p-8 rounded-lg shadow-xl space-y-4 bg-white w-96">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">POS Flow</h1>
-            <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
-          </div>
-          {error && <p className="text-red-500 text-center text-sm bg-red-50 p-2 rounded-lg">{error}</p>}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <input
-              value={credentials.username}
-              name="username"
-              onChange={handleInput}
-              placeholder="admin, manager, or cashier"
-              className="border border-gray-300 rounded-lg p-2.5 w-full text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              value={credentials.password}
-              type="password"
-              name="password"
-              onChange={handleInput}
-              placeholder="Password"
-              className="border border-gray-300 rounded-lg p-2.5 w-full text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
-          >
-            {isLoading ? 'Signing in...' : 'Sign In'}
-          </Button>
-          <div className="text-xs text-gray-400 mt-4 bg-gray-50 p-3 rounded-lg">
-            <p className="font-medium mb-1">Demo credentials:</p>
-            <ul className="space-y-0.5">
-              <li>admin / admin</li>
-              <li>manager / manager</li>
-              <li>cashier / cashier</li>
-            </ul>
-          </div>
-        </div>
-      </form>
+    <div className="flex items-center justify-center min-h-screen bg-muted/30 px-4">
+      <motion.div
+        className="w-full max-w-sm"
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.22 }}
+      >
+      <Card className="shadow-xl">
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-2xl font-bold">POS Flow</CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            {error && (
+              <p className="text-destructive text-center text-sm bg-destructive/10 p-2 rounded-lg">{error}</p>
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={credentials.username}
+                name="username"
+                onChange={handleInput}
+                placeholder="admin, manager, or cashier"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                value={credentials.password}
+                type="password"
+                name="password"
+                onChange={handleInput}
+                placeholder="Password"
+                required
+              />
+            </div>
+            <Button type="submit" disabled={isLoading} className="w-full">
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </Button>
+            <div className="text-xs text-muted-foreground bg-muted p-3 rounded-lg">
+              <p className="font-medium mb-1">Demo credentials:</p>
+              <ul className="space-y-0.5">
+                <li>admin / admin</li>
+                <li>manager / manager</li>
+                <li>cashier / cashier</li>
+              </ul>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      </motion.div>
     </div>
   );
 }

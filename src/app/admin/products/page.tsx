@@ -7,6 +7,10 @@ import { Category } from '@/models/MasterData';
 import { DataTable } from '@/components/admin/DataTable';
 import { Modal } from '@/components/admin/Modal';
 import { PageHeader } from '@/components/admin/PageHeader';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -65,7 +69,7 @@ export default function ProductsPage() {
   };
 
   const columns = [
-    { header: 'Name', accessor: 'name' as keyof Product, className: 'font-medium text-gray-900' },
+    { header: 'Name', accessor: 'name' as keyof Product, className: 'font-medium' },
     { header: 'Price', accessor: (p: Product) => `Rp ${p.price.toLocaleString()}` },
     { header: 'Stock', accessor: 'stock' as keyof Product },
     { header: 'Category', accessor: (p: Product) => categories.find(c => c.id === p.categoryId)?.name || '-' },
@@ -84,8 +88,8 @@ export default function ProductsPage() {
         columns={columns}
         actions={(item) => (
           <>
-            <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
-            <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
+            <Button variant="link" size="sm" className="text-primary" onClick={() => handleEdit(item)}>Edit</Button>
+            <Button variant="link" size="sm" className="text-destructive" onClick={() => handleDelete(item.id)}>Delete</Button>
           </>
         )}
       />
@@ -93,41 +97,38 @@ export default function ProductsPage() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentProduct.id ? 'Edit Product' : 'New Product'}>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input
+            <Label>Name</Label>
+            <Input
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               value={currentProduct.name || ''}
               onChange={(e) => setCurrentProduct({ ...currentProduct, name: e.target.value })}
               placeholder="e.g. Mineral Water"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Price (Rp)</label>
-            <input
+            <Label>Price (Rp)</Label>
+            <Input
               type="number"
               required
               min={0}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               value={currentProduct.price || ''}
               onChange={(e) => setCurrentProduct({ ...currentProduct, price: Number(e.target.value) })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-            <input
+            <Label>Stock</Label>
+            <Input
               type="number"
               required
               min={0}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               value={currentProduct.stock ?? ''}
               onChange={(e) => setCurrentProduct({ ...currentProduct, stock: Number(e.target.value) })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <Label>Category</Label>
             <select
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
               value={currentProduct.categoryId || ''}
               onChange={(e) => setCurrentProduct({ ...currentProduct, categoryId: e.target.value })}
             >
@@ -136,18 +137,16 @@ export default function ProductsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none h-20 resize-none"
+            <Label>Description</Label>
+            <Textarea
+              className="resize-none"
               value={currentProduct.description || ''}
               onChange={(e) => setCurrentProduct({ ...currentProduct, description: e.target.value })}
             />
           </div>
           <div className="flex gap-3 justify-end pt-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">Cancel</button>
-            <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50">
-              {isLoading ? 'Saving...' : 'Save Product'}
-            </button>
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Product'}</Button>
           </div>
         </form>
       </Modal>

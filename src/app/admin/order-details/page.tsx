@@ -13,8 +13,8 @@ export default function OrderDetailsPage() {
   const loadData = async () => setData(await orderRepository.getAllLines());
 
   const columns = [
-    { header: 'Order ID', accessor: 'orderId' as keyof PosOrderLine, className: 'text-gray-500 font-mono text-xs' },
-    { header: 'Product', accessor: 'productName' as keyof PosOrderLine, className: 'font-medium text-gray-900' },
+    { header: 'Order ID', accessor: 'orderId' as keyof PosOrderLine, className: 'text-muted-foreground font-mono text-xs' },
+    { header: 'Product', accessor: 'productName' as keyof PosOrderLine, className: 'font-medium' },
     { header: 'Qty', accessor: 'qty' as keyof PosOrderLine },
     { header: 'Price', accessor: (l: PosOrderLine) => `Rp ${l.price.toLocaleString()}` },
     { header: 'Subtotal', accessor: (l: PosOrderLine) => `Rp ${l.subtotal.toLocaleString()}` },

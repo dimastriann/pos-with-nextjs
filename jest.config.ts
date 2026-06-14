@@ -15,6 +15,7 @@ const config: Config = {
   // Explicit alias mapping so jest.mock('@/…') resolves correctly
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^motion/react$': '<rootDir>/src/__tests__/mocks/motion.ts',
   },
 }
  

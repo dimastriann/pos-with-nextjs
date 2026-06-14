@@ -13,8 +13,8 @@ export default function PaymentsPage() {
   const loadData = async () => setData(await orderRepository.getAllPayments());
 
   const columns = [
-    { header: 'Order ID', accessor: 'orderId' as keyof PosPayment, className: 'text-gray-500 font-mono text-xs' },
-    { header: 'Method', accessor: 'methodName' as keyof PosPayment, className: 'font-medium text-gray-900' },
+    { header: 'Order ID', accessor: 'orderId' as keyof PosPayment, className: 'text-muted-foreground font-mono text-xs' },
+    { header: 'Method', accessor: 'methodName' as keyof PosPayment, className: 'font-medium' },
     { header: 'Amount', accessor: (p: PosPayment) => `Rp ${p.amount.toLocaleString()}` },
     { header: 'Date', accessor: (p: PosPayment) => new Date(p.date).toLocaleString() },
   ];

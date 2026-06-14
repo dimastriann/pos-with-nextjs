@@ -5,6 +5,9 @@ import { warehouseRepository } from '@/repositories/warehouseRepository';
 import { DataTable } from '@/components/admin/DataTable';
 import { Modal } from '@/components/admin/Modal';
 import { PageHeader } from '@/components/admin/PageHeader';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function WarehousesPage() {
   const [data, setData] = useState<Warehouse[]>([]);
@@ -43,8 +46,8 @@ export default function WarehousesPage() {
   };
 
   const columns = [
-    { header: 'Name', accessor: 'name' as keyof Warehouse, className: 'font-medium text-gray-900' },
-    { header: 'Location', accessor: 'location' as keyof Warehouse, className: 'text-gray-500' },
+    { header: 'Name', accessor: 'name' as keyof Warehouse, className: 'font-medium' },
+    { header: 'Location', accessor: 'location' as keyof Warehouse, className: 'text-muted-foreground' },
   ];
 
   return (
@@ -52,23 +55,23 @@ export default function WarehousesPage() {
       <PageHeader title="Warehouses" description="Manage inventory locations." action={{ label: 'Add Warehouse', onClick: handleAddNew }} />
       <DataTable data={data} columns={columns} actions={(item) => (
         <>
-          <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
-          <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
+          <Button variant="link" size="sm" className="text-primary" onClick={() => handleEdit(item)}>Edit</Button>
+          <Button variant="link" size="sm" className="text-destructive" onClick={() => handleDelete(item.id)}>Delete</Button>
         </>
       )} />
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={formData.id ? 'Edit Warehouse' : 'New Warehouse'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={formData.name || ''} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Central Warehouse" />
+            <Label>Name</Label>
+            <Input required value={formData.name || ''} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Central Warehouse" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-            <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={formData.location || ''} onChange={(e) => setFormData({ ...formData, location: e.target.value })} placeholder="e.g. Jakarta Selatan" />
+            <Label>Location</Label>
+            <Input required value={formData.location || ''} onChange={(e) => setFormData({ ...formData, location: e.target.value })} placeholder="e.g. Jakarta Selatan" />
           </div>
           <div className="flex gap-3 justify-end pt-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">Cancel</button>
-            <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50">{isLoading ? 'Saving...' : 'Save Warehouse'}</button>
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Warehouse'}</Button>
           </div>
         </form>
       </Modal>

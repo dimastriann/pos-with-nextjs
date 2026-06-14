@@ -7,6 +7,9 @@ import { shopRepository } from '@/repositories/shopRepository';
 import { usePOS } from '@/lib/context/POSContextStore';
 import { PosSession, PosShop } from '@/models/PosModels';
 import { User } from '@/models/User';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SessionGatePage() {
   const router = useRouter();
@@ -66,63 +69,70 @@ export default function SessionGatePage() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="animate-pulse text-gray-400">Loading session...</div>
+        <div className="space-y-3 w-72">
+          <Skeleton className="h-16 w-16 rounded-full mx-auto" />
+          <Skeleton className="h-6 w-40 mx-auto" />
+          <Skeleton className="h-4 w-32 mx-auto" />
+          <Skeleton className="h-10 w-full mt-4" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-gray-50">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <span className="text-3xl">🏪</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Cash Register</h1>
-          {shop && <p className="text-gray-500 text-sm mt-1">{shop.name}</p>}
-          {user && <p className="text-gray-400 text-xs mt-0.5">Logged in as {user.name}</p>}
-        </div>
-
-        {!user?.shopId ? (
-          <div className="text-center text-red-500 text-sm bg-red-50 p-4 rounded-lg">
-            Your account is not assigned to a shop. Contact your admin.
-          </div>
-        ) : openSession ? (
-          <div className="space-y-3">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
-              <p className="font-medium text-green-800">Open session found</p>
-              <p className="text-green-600 text-xs mt-1">
-                Started: {new Date(openSession.startAt).toLocaleString()}
-              </p>
-              <p className="text-green-600 text-xs">Orders: {openSession.totalOrders}</p>
+    <div className="flex-1 flex items-center justify-center bg-muted/20">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardContent className="p-8">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">
+              🏪
             </div>
-            <button
-              onClick={handleResumeSession}
-              className="w-full py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            >
-              Resume Session
-            </button>
-            <button
-              onClick={handleOpenSession}
-              disabled={isOpening}
-              className="w-full py-2.5 rounded-xl font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              Open New Session
-            </button>
+            <h1 className="text-2xl font-bold text-foreground">Cash Register</h1>
+            {shop && <p className="text-muted-foreground text-sm mt-1">{shop.name}</p>}
+            {user && <p className="text-muted-foreground/70 text-xs mt-0.5">Logged in as {user.name}</p>}
           </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-center text-gray-500 text-sm">No open session. Start a new one to begin selling.</p>
-            <button
-              onClick={handleOpenSession}
-              disabled={isOpening}
-              className="w-full py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {isOpening ? 'Opening...' : 'Open Cash Register'}
-            </button>
-          </div>
-        )}
-      </div>
+
+          {!user?.shopId ? (
+            <p className="text-destructive text-center text-sm bg-destructive/10 p-4 rounded-lg">
+              Your account is not assigned to a shop. Contact your admin.
+            </p>
+          ) : openSession ? (
+            <div className="space-y-3">
+              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 text-sm">
+                <p className="font-medium text-green-800 dark:text-green-400">Open session found</p>
+                <p className="text-green-600 dark:text-green-500 text-xs mt-1">
+                  Started: {new Date(openSession.startAt).toLocaleString()}
+                </p>
+                <p className="text-green-600 dark:text-green-500 text-xs">Orders: {openSession.totalOrders}</p>
+              </div>
+              <Button onClick={handleResumeSession} className="w-full h-11 font-bold">
+                Resume Session
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleOpenSession}
+                disabled={isOpening}
+                className="w-full"
+              >
+                Open New Session
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-center text-muted-foreground text-sm">
+                No open session. Start a new one to begin selling.
+              </p>
+              <Button
+                onClick={handleOpenSession}
+                disabled={isOpening}
+                className="w-full h-11 font-bold"
+              >
+                {isOpening ? 'Opening...' : 'Open Cash Register'}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

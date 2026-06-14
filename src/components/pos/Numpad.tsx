@@ -1,6 +1,8 @@
 'use client';
-import React from 'react';
+import { motion } from 'motion/react';
 import { NumpadMode } from '@/types/POSContext';
+import { Button } from '@/components/ui/button';
+import { Delete } from 'lucide-react';
 
 interface NumpadProps {
   mode: NumpadMode;
@@ -19,51 +21,54 @@ export default function Numpad({ mode, inputValue, onPress, onModeChange, onPaym
       {/* Mode selector */}
       <div className="grid grid-cols-3 gap-1 mb-2">
         {(['qty', 'disc', 'price'] as NumpadMode[]).map((m) => (
-          <button
+          <Button
             key={m}
+            size="sm"
+            variant={mode === m ? 'default' : 'ghost'}
             onClick={() => onModeChange(m)}
-            className={`py-1.5 rounded text-xs font-bold uppercase transition-colors ${
-              mode === m ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+            className="text-xs font-bold uppercase"
           >
             {m === 'disc' ? 'Disc %' : m}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Input display */}
-      <div className="bg-gray-100 rounded-lg px-3 py-2 text-right font-mono text-lg font-bold text-gray-800 mb-2 min-h-[40px]">
+      <div className="bg-muted rounded-lg px-3 py-2 text-right font-mono text-lg font-bold text-foreground mb-2 min-h-[44px]">
         {inputValue || '0'}
       </div>
 
       {/* Digit grid */}
       <div className="grid grid-cols-3 gap-1 mb-1">
         {DIGITS.map((char) => (
-          <button
-            key={char}
-            onClick={() => onPress(char)}
-            className="py-3 rounded-lg font-semibold text-sm bg-white border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
-          >
-            {char}
-          </button>
+          <motion.div key={char} whileTap={{ scale: 0.88 }} transition={{ duration: 0.08 }}>
+            <Button
+              variant="outline"
+              onClick={() => onPress(char)}
+              className="h-12 w-full text-base font-semibold"
+            >
+              {char}
+            </Button>
+          </motion.div>
         ))}
       </div>
 
       {/* Delete + Payment */}
       <div className="grid grid-cols-3 gap-1 mt-1">
-        <button
+        <Button
+          variant="outline"
           onClick={() => onPress('del')}
-          className="col-span-1 py-3 rounded-lg font-semibold text-sm bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors"
+          className="col-span-1 h-12 text-destructive border-destructive/30 hover:bg-destructive/10"
         >
-          ⌫
-        </button>
-        <button
+          <Delete className="h-4 w-4" />
+        </Button>
+        <Button
           onClick={onPayment}
           disabled={!canPay}
-          className="col-span-2 py-3 rounded-lg font-bold text-sm bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="col-span-2 h-12 text-base font-bold"
         >
           Payment
-        </button>
+        </Button>
       </div>
     </div>
   );

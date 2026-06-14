@@ -6,6 +6,10 @@ import { DataTable } from '@/components/admin/DataTable';
 import { KanbanCard } from '@/components/admin/KanbanCard';
 import { Modal } from '@/components/admin/Modal';
 import { PageHeader } from '@/components/admin/PageHeader';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function ShopsPage() {
   const [data, setData] = useState<PosShop[]>([]);
@@ -45,7 +49,7 @@ export default function ShopsPage() {
   };
 
   const columns = [
-    { header: 'Name', accessor: 'name' as keyof PosShop, className: 'font-medium text-gray-900' },
+    { header: 'Name', accessor: 'name' as keyof PosShop, className: 'font-medium' },
     { header: 'Address', accessor: 'address' as keyof PosShop },
     { header: 'Active', accessor: (s: PosShop) => (s.active ? 'Yes' : 'No') },
   ];
@@ -71,8 +75,8 @@ export default function ShopsPage() {
       {viewMode === 'list' ? (
         <DataTable data={data} columns={columns} actions={(item) => (
           <>
-            <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
-            <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
+            <Button variant="link" size="sm" className="text-primary" onClick={() => handleEdit(item)}>Edit</Button>
+            <Button variant="link" size="sm" className="text-destructive" onClick={() => handleDelete(item.id)}>Delete</Button>
           </>
         )} />
       ) : (
@@ -85,24 +89,24 @@ export default function ShopsPage() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={formData.id ? 'Edit Shop' : 'New Shop'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Shop Name</label>
-            <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={formData.name || ''} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Main Branch" />
+            <Label>Shop Name</Label>
+            <Input required value={formData.name || ''} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Main Branch" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <textarea className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none h-20 resize-none" value={formData.address || ''} onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="Full address..." />
+            <Label>Address</Label>
+            <Textarea className="resize-none" value={formData.address || ''} onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="Full address..." />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="e.g. +62 812..." />
+            <Label>Phone</Label>
+            <Input value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="e.g. +62 812..." />
           </div>
           <div className="flex items-center gap-2">
             <input type="checkbox" id="active" checked={formData.active ?? true} onChange={(e) => setFormData({ ...formData, active: e.target.checked })} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             <label htmlFor="active" className="text-sm font-medium text-gray-700">Active Shop</label>
           </div>
           <div className="flex gap-3 justify-end pt-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">Cancel</button>
-            <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50">{isLoading ? 'Saving...' : 'Save Shop'}</button>
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Shop'}</Button>
           </div>
         </form>
       </Modal>

@@ -1,4 +1,4 @@
-import { Button } from '@/components/pos/ControlButton';
+import { Button } from '@/components/ui/button';
 
 export function LoginScreen() {
   const onLogin = () => {

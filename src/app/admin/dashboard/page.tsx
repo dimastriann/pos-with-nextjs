@@ -1,9 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { orderRepository } from '@/repositories/orderRepository';
 import { productRepository } from '@/repositories/productRepository';
 import { contactRepository } from '@/repositories/contactRepository';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface Stats {
   totalSales: number;
@@ -34,33 +37,44 @@ export default function AdminDashboard() {
   }, []);
 
   const cards = [
-    { label: 'Total Sales', value: `Rp ${stats.totalSales.toLocaleString()}`, color: 'bg-blue-600' },
-    { label: 'Orders', value: stats.totalOrders.toString(), color: 'bg-indigo-600' },
-    { label: 'Products', value: stats.totalProducts.toString(), color: 'bg-purple-600' },
-    { label: 'Customers', value: stats.totalCustomers.toString(), color: 'bg-pink-600' },
+    { label: 'Total Sales', value: `Rp ${stats.totalSales.toLocaleString()}` },
+    { label: 'Orders', value: stats.totalOrders.toString() },
+    { label: 'Products', value: stats.totalProducts.toString() },
+    { label: 'Customers', value: stats.totalCustomers.toString() },
   ];
 
   return (
     <div>
       <PageHeader title="Dashboard" description="Overview of your store's performance." />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         {cards.map((card, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">{card.label}</p>
-              <h3 className="text-2xl font-bold text-gray-900">{card.value}</h3>
-            </div>
-            <div className={`text-xs font-bold text-white px-2 py-1 rounded-full ${card.color}`}>Live</div>
-          </div>
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: idx * 0.07 }}
+          >
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">{card.label}</p>
+                    <h3 className="text-2xl font-bold text-foreground">{card.value}</h3>
+                  </div>
+                  <Badge variant="secondary" className="text-primary bg-primary/10 text-xs">Live</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-64 flex items-center justify-center">
-          <p className="text-gray-400 text-sm">Sales chart coming soon</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-64 flex items-center justify-center">
-          <p className="text-gray-400 text-sm">Recent activity coming soon</p>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+        <Card className="h-64 flex items-center justify-center">
+          <p className="text-muted-foreground text-sm">Sales chart coming soon</p>
+        </Card>
+        <Card className="h-64 flex items-center justify-center">
+          <p className="text-muted-foreground text-sm">Recent activity coming soon</p>
+        </Card>
       </div>
     </div>
   );
