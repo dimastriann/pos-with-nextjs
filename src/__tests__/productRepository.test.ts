@@ -59,8 +59,8 @@ describe('productRepository.getById', () => {
 describe('productRepository.create', () => {
   it('generates an id and calls adapter.create', async () => {
     const data = { name: 'Espresso', price: 20000, stock: 100 };
-    (adapter.create as jest.Mock).mockImplementation((_res: string, item: unknown) =>
-      Promise.resolve(item)
+    (adapter.create as jest.Mock).mockImplementation(
+      (_res: string, item: unknown) => Promise.resolve(item),
     );
 
     const created = await productRepository.create(data);
@@ -69,32 +69,42 @@ describe('productRepository.create', () => {
     expect(created.name).toBe('Espresso');
     expect(adapter.create).toHaveBeenCalledWith(
       PRODUCTS,
-      expect.objectContaining({ name: 'Espresso', price: 20000 })
+      expect.objectContaining({ name: 'Espresso', price: 20000 }),
     );
   });
 
   it('throws a Zod error when price is negative', () => {
     // ProductSchema.parse() throws synchronously before a Promise is returned
-    expect(() => productRepository.create({ name: 'Bad', price: -1, stock: 0 })).toThrow();
+    expect(() =>
+      productRepository.create({ name: 'Bad', price: -1, stock: 0 }),
+    ).toThrow();
     expect(adapter.create).not.toHaveBeenCalled();
   });
 
   it('throws a Zod error when name is empty', () => {
-    expect(() => productRepository.create({ name: '', price: 1000, stock: 0 })).toThrow();
+    expect(() =>
+      productRepository.create({ name: '', price: 1000, stock: 0 }),
+    ).toThrow();
   });
 });
 
 describe('productRepository.update', () => {
   it('validates and calls adapter.update', async () => {
     const product = { id: 'p1', name: 'Coffee', price: 15000, stock: 10 };
-    (adapter.update as jest.Mock).mockResolvedValue({ ...product, price: 18000 });
+    (adapter.update as jest.Mock).mockResolvedValue({
+      ...product,
+      price: 18000,
+    });
 
-    const updated = await productRepository.update({ ...product, price: 18000 });
+    const updated = await productRepository.update({
+      ...product,
+      price: 18000,
+    });
 
     expect(updated.price).toBe(18000);
     expect(adapter.update).toHaveBeenCalledWith(
       PRODUCTS,
-      expect.objectContaining({ price: 18000 })
+      expect.objectContaining({ price: 18000 }),
     );
   });
 });
@@ -111,30 +121,30 @@ describe('productRepository.decrementStock', () => {
   it('decrements stock by the given quantity', async () => {
     const product = { id: 'p1', name: 'Coffee', price: 15000, stock: 10 };
     (adapter.getById as jest.Mock).mockResolvedValue(product);
-    (adapter.update as jest.Mock).mockImplementation((_res: string, item: unknown) =>
-      Promise.resolve(item)
+    (adapter.update as jest.Mock).mockImplementation(
+      (_res: string, item: unknown) => Promise.resolve(item),
     );
 
     await productRepository.decrementStock('p1', 3);
 
     expect(adapter.update).toHaveBeenCalledWith(
       PRODUCTS,
-      expect.objectContaining({ id: 'p1', stock: 7 })
+      expect.objectContaining({ id: 'p1', stock: 7 }),
     );
   });
 
   it('clamps stock at 0 and does not go negative', async () => {
     const product = { id: 'p1', name: 'Coffee', price: 15000, stock: 2 };
     (adapter.getById as jest.Mock).mockResolvedValue(product);
-    (adapter.update as jest.Mock).mockImplementation((_res: string, item: unknown) =>
-      Promise.resolve(item)
+    (adapter.update as jest.Mock).mockImplementation(
+      (_res: string, item: unknown) => Promise.resolve(item),
     );
 
     await productRepository.decrementStock('p1', 10);
 
     expect(adapter.update).toHaveBeenCalledWith(
       PRODUCTS,
-      expect.objectContaining({ stock: 0 })
+      expect.objectContaining({ stock: 0 }),
     );
   });
 

@@ -26,14 +26,19 @@ export const sessionRepository = {
 
   getOpenSessionForShop: async (shopId: string): Promise<PosSession | null> => {
     const sessions = await adapter.getAll<PosSession>(RESOURCE_KEYS.SESSIONS);
-    return sessions.find((s) => s.shopId === shopId && s.status === 'Open') ?? null;
+    return (
+      sessions.find((s) => s.shopId === shopId && s.status === 'Open') ?? null
+    );
   },
 
   incrementTotals: async (
     id: string,
     delta: { totalOrders: number; totalCash: number },
   ): Promise<void> => {
-    const session = await adapter.getById<PosSession>(RESOURCE_KEYS.SESSIONS, id);
+    const session = await adapter.getById<PosSession>(
+      RESOURCE_KEYS.SESSIONS,
+      id,
+    );
     if (!session) return;
     await adapter.update(RESOURCE_KEYS.SESSIONS, {
       ...session,

@@ -1,4 +1,8 @@
-import { computeSubtotal, computeCartTotal, computeChange } from '@/lib/utils/cartCalculations';
+import {
+  computeSubtotal,
+  computeCartTotal,
+  computeChange,
+} from '@/lib/utils/cartCalculations';
 import { CartLine } from '@/models/CartModels';
 
 const makeCartLine = (overrides: Partial<CartLine> = {}): CartLine => ({

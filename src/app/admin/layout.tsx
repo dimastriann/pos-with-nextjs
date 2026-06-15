@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -16,7 +20,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile Sheet drawer */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-64 p-0 bg-sidebar border-sidebar-border">
+        <SheetContent
+          side="left"
+          className="w-64 p-0 bg-sidebar border-sidebar-border"
+        >
           <SidebarContent onNavigate={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
@@ -24,7 +31,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Mobile top bar */}
         <header className="md:hidden flex items-center justify-between px-4 py-2.5 border-b border-border bg-background flex-shrink-0">
-          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileOpen(true)}
+          >
             <Menu className="h-5 w-5" />
           </Button>
           <span className="font-bold text-foreground">POS Flow</span>

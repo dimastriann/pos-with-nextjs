@@ -23,7 +23,10 @@ export default function SessionGatePage() {
   useEffect(() => {
     const load = async () => {
       const currentUser = await adapter.getCurrentUser();
-      if (!currentUser) { router.push('/login'); return; }
+      if (!currentUser) {
+        router.push('/login');
+        return;
+      }
       setUser(currentUser);
 
       if (currentUser.shopId) {
@@ -87,9 +90,17 @@ export default function SessionGatePage() {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">
               🏪
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Cash Register</h1>
-            {shop && <p className="text-muted-foreground text-sm mt-1">{shop.name}</p>}
-            {user && <p className="text-muted-foreground/70 text-xs mt-0.5">Logged in as {user.name}</p>}
+            <h1 className="text-2xl font-bold text-foreground">
+              Cash Register
+            </h1>
+            {shop && (
+              <p className="text-muted-foreground text-sm mt-1">{shop.name}</p>
+            )}
+            {user && (
+              <p className="text-muted-foreground/70 text-xs mt-0.5">
+                Logged in as {user.name}
+              </p>
+            )}
           </div>
 
           {!user?.shopId ? (
@@ -99,13 +110,20 @@ export default function SessionGatePage() {
           ) : openSession ? (
             <div className="space-y-3">
               <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 text-sm">
-                <p className="font-medium text-green-800 dark:text-green-400">Open session found</p>
+                <p className="font-medium text-green-800 dark:text-green-400">
+                  Open session found
+                </p>
                 <p className="text-green-600 dark:text-green-500 text-xs mt-1">
                   Started: {new Date(openSession.startAt).toLocaleString()}
                 </p>
-                <p className="text-green-600 dark:text-green-500 text-xs">Orders: {openSession.totalOrders}</p>
+                <p className="text-green-600 dark:text-green-500 text-xs">
+                  Orders: {openSession.totalOrders}
+                </p>
               </div>
-              <Button onClick={handleResumeSession} className="w-full h-11 font-bold">
+              <Button
+                onClick={handleResumeSession}
+                className="w-full h-11 font-bold"
+              >
                 Resume Session
               </Button>
               <Button

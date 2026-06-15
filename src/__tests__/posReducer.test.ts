@@ -66,7 +66,10 @@ describe('posReducer — ADD_PRODUCT', () => {
   });
 
   it('adds a second distinct product as a new line', () => {
-    const s1 = posReducer(initialPOSState, { type: 'ADD_PRODUCT', product: makeProduct() });
+    const s1 = posReducer(initialPOSState, {
+      type: 'ADD_PRODUCT',
+      product: makeProduct(),
+    });
     const s2 = posReducer(s1, {
       type: 'ADD_PRODUCT',
       product: makeProduct({ id: 'prod-2', name: 'Tea', price: 8000 }),
@@ -77,7 +80,10 @@ describe('posReducer — ADD_PRODUCT', () => {
 
   it('clears numpadInput when adding a product', () => {
     const state: POSState = { ...initialPOSState, numpadInput: '5' };
-    const next = posReducer(state, { type: 'ADD_PRODUCT', product: makeProduct() });
+    const next = posReducer(state, {
+      type: 'ADD_PRODUCT',
+      product: makeProduct(),
+    });
     expect(next.numpadInput).toBe('');
   });
 });
@@ -93,7 +99,10 @@ describe('posReducer — REMOVE_LINE', () => {
   it('clamps selectedLineIndex after removal', () => {
     const s: POSState = {
       ...initialPOSState,
-      cartLines: [makeCartLine({ productId: 'a' }), makeCartLine({ productId: 'b' })],
+      cartLines: [
+        makeCartLine({ productId: 'a' }),
+        makeCartLine({ productId: 'b' }),
+      ],
       selectedLineIndex: 1,
     };
     const next = posReducer(s, { type: 'REMOVE_LINE', index: 1 });
@@ -104,7 +113,11 @@ describe('posReducer — REMOVE_LINE', () => {
 
 describe('posReducer — SELECT_LINE', () => {
   it('updates selectedLineIndex and clears numpadInput', () => {
-    const s: POSState = { ...initialPOSState, numpadInput: '3', selectedLineIndex: null };
+    const s: POSState = {
+      ...initialPOSState,
+      numpadInput: '3',
+      selectedLineIndex: null,
+    };
     const next = posReducer(s, { type: 'SELECT_LINE', index: 0 });
     expect(next.selectedLineIndex).toBe(0);
     expect(next.numpadInput).toBe('');
@@ -114,7 +127,10 @@ describe('posReducer — SELECT_LINE', () => {
 describe('posReducer — SET_CUSTOMER / CLEAR_ORDER', () => {
   it('SET_CUSTOMER sets the customer', () => {
     const customer = { id: 'c1', name: 'Alice', type: 'Customer' as const };
-    const next = posReducer(initialPOSState, { type: 'SET_CUSTOMER', customer });
+    const next = posReducer(initialPOSState, {
+      type: 'SET_CUSTOMER',
+      customer,
+    });
     expect(next.customer).toEqual(customer);
   });
 
@@ -272,7 +288,11 @@ describe('posReducer — GOTO_RECEIPT / NEW_ORDER', () => {
   });
 
   it('NEW_ORDER returns to pos_order and clears lastCompletedOrder', () => {
-    const s: POSState = { ...initialPOSState, currentScreen: 'receipt', lastCompletedOrder: completedOrder };
+    const s: POSState = {
+      ...initialPOSState,
+      currentScreen: 'receipt',
+      lastCompletedOrder: completedOrder,
+    };
     const next = posReducer(s, { type: 'NEW_ORDER' });
     expect(next.currentScreen).toBe('pos_order');
     expect(next.lastCompletedOrder).toBeNull();
@@ -283,7 +303,11 @@ describe('posReducer — SESSION_START / SESSION_END', () => {
   it('SESSION_START sets active session and shop', () => {
     const session = makeSession();
     const shop = makeShop();
-    const next = posReducer(initialPOSState, { type: 'SESSION_START', session, shop });
+    const next = posReducer(initialPOSState, {
+      type: 'SESSION_START',
+      session,
+      shop,
+    });
     expect(next.activeSession).toEqual(session);
     expect(next.activeShop).toEqual(shop);
   });
@@ -306,19 +330,28 @@ describe('posReducer — SET_PAYMENT_METHODS / SET_LOADING / SET_ERROR', () => {
       { id: 'm1', name: 'Cash', type: 'Cash' },
       { id: 'm2', name: 'Debit', type: 'Bank' },
     ];
-    const next = posReducer(initialPOSState, { type: 'SET_PAYMENT_METHODS', methods });
+    const next = posReducer(initialPOSState, {
+      type: 'SET_PAYMENT_METHODS',
+      methods,
+    });
     expect(next.availablePaymentMethods).toEqual(methods);
   });
 
   it('SET_LOADING toggles the loading flag', () => {
-    const s1 = posReducer(initialPOSState, { type: 'SET_LOADING', loading: true });
+    const s1 = posReducer(initialPOSState, {
+      type: 'SET_LOADING',
+      loading: true,
+    });
     expect(s1.isLoading).toBe(true);
     const s2 = posReducer(s1, { type: 'SET_LOADING', loading: false });
     expect(s2.isLoading).toBe(false);
   });
 
   it('SET_ERROR sets an error message', () => {
-    const next = posReducer(initialPOSState, { type: 'SET_ERROR', error: 'Something went wrong' });
+    const next = posReducer(initialPOSState, {
+      type: 'SET_ERROR',
+      error: 'Something went wrong',
+    });
     expect(next.error).toBe('Something went wrong');
   });
 

@@ -1,6 +1,10 @@
 import { CartLine } from '@/models/CartModels';
 
-export function computeSubtotal(price: number, qty: number, discount: number): number {
+export function computeSubtotal(
+  price: number,
+  qty: number,
+  discount: number,
+): number {
   return price * qty * (1 - discount / 100);
 }
 

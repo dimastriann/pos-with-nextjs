@@ -16,7 +16,12 @@ interface Stats {
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>({ totalSales: 0, totalOrders: 0, totalProducts: 0, totalCustomers: 0 });
+  const [stats, setStats] = useState<Stats>({
+    totalSales: 0,
+    totalOrders: 0,
+    totalProducts: 0,
+    totalCustomers: 0,
+  });
 
   useEffect(() => {
     const load = async () => {
@@ -45,7 +50,10 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" description="Overview of your store's performance." />
+      <PageHeader
+        title="Dashboard"
+        description="Overview of your store's performance."
+      />
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         {cards.map((card, idx) => (
           <motion.div
@@ -58,10 +66,19 @@ export default function AdminDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">{card.label}</p>
-                    <h3 className="text-2xl font-bold text-foreground">{card.value}</h3>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      {card.label}
+                    </p>
+                    <h3 className="text-2xl font-bold text-foreground">
+                      {card.value}
+                    </h3>
                   </div>
-                  <Badge variant="secondary" className="text-primary bg-primary/10 text-xs">Live</Badge>
+                  <Badge
+                    variant="secondary"
+                    className="text-primary bg-primary/10 text-xs"
+                  >
+                    Live
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -70,10 +87,14 @@ export default function AdminDashboard() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
         <Card className="h-64 flex items-center justify-center">
-          <p className="text-muted-foreground text-sm">Sales chart coming soon</p>
+          <p className="text-muted-foreground text-sm">
+            Sales chart coming soon
+          </p>
         </Card>
         <Card className="h-64 flex items-center justify-center">
-          <p className="text-muted-foreground text-sm">Recent activity coming soon</p>
+          <p className="text-muted-foreground text-sm">
+            Recent activity coming soon
+          </p>
         </Card>
       </div>
     </div>

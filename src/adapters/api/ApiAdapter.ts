@@ -31,7 +31,11 @@ export class ApiAdapter implements IBackendAdapter {
     return h;
   }
 
-  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
     const res = await fetch(`${this.baseUrl}/${path}`, {
       method,
       headers: this.headers(),
@@ -58,11 +62,17 @@ export class ApiAdapter implements IBackendAdapter {
     }
   }
 
-  async create<T extends { id: string }>(resource: string, item: T): Promise<T> {
+  async create<T extends { id: string }>(
+    resource: string,
+    item: T,
+  ): Promise<T> {
     return this.request<T>('POST', resource, item);
   }
 
-  async update<T extends { id: string }>(resource: string, item: T): Promise<T> {
+  async update<T extends { id: string }>(
+    resource: string,
+    item: T,
+  ): Promise<T> {
     return this.request<T>('PUT', `${resource}/${item.id}`, item);
   }
 
@@ -72,10 +82,14 @@ export class ApiAdapter implements IBackendAdapter {
 
   async login(username: string, password: string): Promise<AuthResult> {
     try {
-      const data = await this.request<{ user: User; token: string }>('POST', 'auth/login', {
-        username,
-        password,
-      });
+      const data = await this.request<{ user: User; token: string }>(
+        'POST',
+        'auth/login',
+        {
+          username,
+          password,
+        },
+      );
       this.token = data.token;
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('pos_token', data.token);

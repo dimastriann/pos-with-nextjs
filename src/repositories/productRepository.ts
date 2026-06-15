@@ -24,6 +24,11 @@ export const productRepository = {
   delete: (id: string): Promise<void> =>
     adapter.delete(RESOURCE_KEYS.PRODUCTS, id),
 
+  getByBarcode: async (barcode: string): Promise<Product | null> => {
+    const all = await adapter.getAll<Product>(RESOURCE_KEYS.PRODUCTS);
+    return all.find((p) => p.barcode === barcode) ?? null;
+  },
+
   decrementStock: async (id: string, qty: number): Promise<void> => {
     const product = await adapter.getById<Product>(RESOURCE_KEYS.PRODUCTS, id);
     if (!product) return;

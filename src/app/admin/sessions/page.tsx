@@ -8,30 +8,47 @@ import { PageHeader } from '@/components/admin/PageHeader';
 export default function SessionsPage() {
   const [data, setData] = useState<PosSession[]>([]);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => setData(await sessionRepository.getAll());
 
   const columns = [
-    { header: 'ID', accessor: 'id' as keyof PosSession, className: 'font-mono text-xs text-muted-foreground' },
+    {
+      header: 'ID',
+      accessor: 'id' as keyof PosSession,
+      className: 'font-mono text-xs text-muted-foreground',
+    },
     { header: 'Shop ID', accessor: 'shopId' as keyof PosSession },
     { header: 'User ID', accessor: 'userId' as keyof PosSession },
-    { header: 'Start Time', accessor: (s: PosSession) => new Date(s.startAt).toLocaleString() },
+    {
+      header: 'Start Time',
+      accessor: (s: PosSession) => new Date(s.startAt).toLocaleString(),
+    },
     {
       header: 'Status',
       accessor: (s: PosSession) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-bold ${s.status === 'Open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-bold ${s.status === 'Open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
+        >
           {s.status}
         </span>
       ),
     },
     { header: 'Total Orders', accessor: 'totalOrders' as keyof PosSession },
-    { header: 'Cash', accessor: (s: PosSession) => `Rp ${s.totalCash.toLocaleString()}` },
+    {
+      header: 'Cash',
+      accessor: (s: PosSession) => `Rp ${s.totalCash.toLocaleString()}`,
+    },
   ];
 
   return (
     <div>
-      <PageHeader title="POS Sessions" description="View cash register history." />
+      <PageHeader
+        title="POS Sessions"
+        description="View cash register history."
+      />
       <DataTable data={data} columns={columns} />
     </div>
   );

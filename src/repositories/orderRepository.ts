@@ -1,6 +1,10 @@
 import { adapter } from '@/adapters';
 import { RESOURCE_KEYS } from '@/adapters/resourceKeys';
-import { OrderSchema, OrderLineSchema, PaymentRecordSchema } from '@/schemas/order.schema';
+import {
+  OrderSchema,
+  OrderLineSchema,
+  PaymentRecordSchema,
+} from '@/schemas/order.schema';
 import { PosOrder, PosOrderLine, PosPayment } from '@/models/PosModels';
 
 export const orderRepository = {

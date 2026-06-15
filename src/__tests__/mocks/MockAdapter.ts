@@ -17,16 +17,22 @@ export class MockAdapter implements IBackendAdapter {
   }
 
   async getById<T>(resource: string, id: string): Promise<T | null> {
-    return ((this.store[resource]?.[id] as T) ?? null);
+    return (this.store[resource]?.[id] as T) ?? null;
   }
 
-  async create<T extends { id: string }>(resource: string, item: T): Promise<T> {
+  async create<T extends { id: string }>(
+    resource: string,
+    item: T,
+  ): Promise<T> {
     if (!this.store[resource]) this.store[resource] = {};
     this.store[resource][item.id] = item as unknown as AnyRecord;
     return item;
   }
 
-  async update<T extends { id: string }>(resource: string, item: T): Promise<T> {
+  async update<T extends { id: string }>(
+    resource: string,
+    item: T,
+  ): Promise<T> {
     if (!this.store[resource]) this.store[resource] = {};
     this.store[resource][item.id] = item as unknown as AnyRecord;
     return item;
@@ -37,7 +43,9 @@ export class MockAdapter implements IBackendAdapter {
   }
 
   async login(username: string, password: string): Promise<AuthResult> {
-    const user = this.users.find((u) => u.username === username && u.password === password);
+    const user = this.users.find(
+      (u) => u.username === username && u.password === password,
+    );
     if (user) {
       this.currentUser = user;
       return { success: true, user };

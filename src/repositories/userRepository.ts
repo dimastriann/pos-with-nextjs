@@ -5,8 +5,7 @@ import { User } from '@/models/User';
 import { generateId } from '@/lib/utils/generateId';
 
 export const userRepository = {
-  getAll: (): Promise<User[]> =>
-    adapter.getAll<User>(RESOURCE_KEYS.USERS),
+  getAll: (): Promise<User[]> => adapter.getAll<User>(RESOURCE_KEYS.USERS),
 
   getById: (id: string): Promise<User | null> =>
     adapter.getById<User>(RESOURCE_KEYS.USERS, id),

@@ -61,7 +61,9 @@ export function DataTable<T extends { id: string | number }>({
                   ))}
                   {actions && (
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">{actions(item)}</div>
+                      <div className="flex justify-end gap-2">
+                        {actions(item)}
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>

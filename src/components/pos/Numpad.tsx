@@ -15,7 +15,14 @@ interface NumpadProps {
 
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '+/-', '0', '.'];
 
-export default function Numpad({ mode, inputValue, onPress, onModeChange, onPayment, canPay }: NumpadProps) {
+export default function Numpad({
+  mode,
+  inputValue,
+  onPress,
+  onModeChange,
+  onPayment,
+  canPay,
+}: NumpadProps) {
   return (
     <div className="p-2 select-none">
       {/* Mode selector */}
@@ -41,7 +48,11 @@ export default function Numpad({ mode, inputValue, onPress, onModeChange, onPaym
       {/* Digit grid */}
       <div className="grid grid-cols-3 gap-1 mb-1">
         {DIGITS.map((char) => (
-          <motion.div key={char} whileTap={{ scale: 0.88 }} transition={{ duration: 0.08 }}>
+          <motion.div
+            key={char}
+            whileTap={{ scale: 0.88 }}
+            transition={{ duration: 0.08 }}
+          >
             <Button
               variant="outline"
               onClick={() => onPress(char)}

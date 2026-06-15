@@ -1,6 +1,9 @@
 import { POSState, POSAction, NumpadMode } from '@/types/POSContext';
 import { CartLine } from '@/models/CartModels';
-import { computeSubtotal, computeCartTotal } from '@/lib/utils/cartCalculations';
+import {
+  computeSubtotal,
+  computeCartTotal,
+} from '@/lib/utils/cartCalculations';
 import { Product } from '@/models/Product';
 
 export const initialPOSState: POSState = {
@@ -19,7 +22,12 @@ export const initialPOSState: POSState = {
   lastCompletedOrder: null,
 };
 
-function applyNumpadInput(lines: CartLine[], index: number, mode: NumpadMode, input: string): CartLine[] {
+function applyNumpadInput(
+  lines: CartLine[],
+  index: number,
+  mode: NumpadMode,
+  input: string,
+): CartLine[] {
   if (index < 0 || index >= lines.length || !input) return lines;
   const value = parseFloat(input);
   if (isNaN(value)) return lines;
@@ -33,7 +41,10 @@ function applyNumpadInput(lines: CartLine[], index: number, mode: NumpadMode, in
   return updated;
 }
 
-function addProduct(lines: CartLine[], product: Product): { lines: CartLine[]; selectedIndex: number } {
+function addProduct(
+  lines: CartLine[],
+  product: Product,
+): { lines: CartLine[]; selectedIndex: number } {
   const idx = lines.findIndex((l) => l.productId === product.id);
   if (idx !== -1) {
     const updated = lines.map((l, i) => {
@@ -57,13 +68,22 @@ function addProduct(lines: CartLine[], product: Product): { lines: CartLine[]; s
 export function posReducer(state: POSState, action: POSAction): POSState {
   switch (action.type) {
     case 'ADD_PRODUCT': {
-      const { lines, selectedIndex } = addProduct(state.cartLines, action.product);
-      return { ...state, cartLines: lines, selectedLineIndex: selectedIndex, numpadInput: '' };
+      const { lines, selectedIndex } = addProduct(
+        state.cartLines,
+        action.product,
+      );
+      return {
+        ...state,
+        cartLines: lines,
+        selectedLineIndex: selectedIndex,
+        numpadInput: '',
+      };
     }
 
     case 'REMOVE_LINE': {
       const lines = state.cartLines.filter((_, i) => i !== action.index);
-      const selectedLineIndex = lines.length === 0 ? null : Math.min(action.index, lines.length - 1);
+      const selectedLineIndex =
+        lines.length === 0 ? null : Math.min(action.index, lines.length - 1);
       return { ...state, cartLines: lines, selectedLineIndex, numpadInput: '' };
     }
 
@@ -74,15 +94,32 @@ export function posReducer(state: POSState, action: POSAction): POSState {
       return { ...state, customer: action.customer };
 
     case 'CLEAR_ORDER':
-      return { ...state, cartLines: [], selectedLineIndex: null, customer: null, numpadInput: '', paymentLines: [] };
+      return {
+        ...state,
+        cartLines: [],
+        selectedLineIndex: null,
+        customer: null,
+        numpadInput: '',
+        paymentLines: [],
+      };
 
     case 'SET_NUMPAD_MODE': {
       // Commit current input before switching mode
       const lines =
         state.selectedLineIndex !== null
-          ? applyNumpadInput(state.cartLines, state.selectedLineIndex, state.numpadMode, state.numpadInput)
+          ? applyNumpadInput(
+              state.cartLines,
+              state.selectedLineIndex,
+              state.numpadMode,
+              state.numpadInput,
+            )
           : state.cartLines;
-      return { ...state, numpadMode: action.mode, numpadInput: '', cartLines: lines };
+      return {
+        ...state,
+        numpadMode: action.mode,
+        numpadInput: '',
+        cartLines: lines,
+      };
     }
 
     case 'NUMPAD_PRESS': {
@@ -111,7 +148,12 @@ export function posReducer(state: POSState, action: POSAction): POSState {
       // Commit immediately to the selected line for live feedback
       const lines =
         state.selectedLineIndex !== null
-          ? applyNumpadInput(state.cartLines, state.selectedLineIndex, state.numpadMode, newInput)
+          ? applyNumpadInput(
+              state.cartLines,
+              state.selectedLineIndex,
+              state.numpadMode,
+              newInput,
+            )
           : state.cartLines;
 
       return { ...state, numpadInput: newInput, cartLines: lines };
@@ -121,16 +163,27 @@ export function posReducer(state: POSState, action: POSAction): POSState {
       const total = computeCartTotal(state.cartLines);
       const alreadyPaid = state.paymentLines.reduce((s, p) => s + p.amount, 0);
       const remaining = Math.max(0, total - alreadyPaid);
-      const payment = { ...action.payment, amount: Math.min(action.payment.amount, remaining + 0.001) };
+      const payment = {
+        ...action.payment,
+        amount: Math.min(action.payment.amount, remaining + 0.001),
+      };
       return { ...state, paymentLines: [...state.paymentLines, payment] };
     }
 
     case 'REMOVE_PAYMENT':
-      return { ...state, paymentLines: state.paymentLines.filter((_, i) => i !== action.index) };
+      return {
+        ...state,
+        paymentLines: state.paymentLines.filter((_, i) => i !== action.index),
+      };
 
     case 'GOTO_PAYMENT':
       if (state.cartLines.length === 0) return state;
-      return { ...state, currentScreen: 'payment', paymentLines: [], numpadInput: '' };
+      return {
+        ...state,
+        currentScreen: 'payment',
+        paymentLines: [],
+        numpadInput: '',
+      };
 
     case 'GOTO_ORDER':
       return { ...state, currentScreen: 'pos_order', paymentLines: [] };
@@ -151,7 +204,11 @@ export function posReducer(state: POSState, action: POSAction): POSState {
       return { ...state, currentScreen: 'pos_order', lastCompletedOrder: null };
 
     case 'SESSION_START':
-      return { ...state, activeSession: action.session, activeShop: action.shop };
+      return {
+        ...state,
+        activeSession: action.session,
+        activeShop: action.shop,
+      };
 
     case 'SESSION_END':
       return { ...state, activeSession: null, activeShop: null };

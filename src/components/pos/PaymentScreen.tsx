@@ -20,22 +20,31 @@ export const PaymentScreen = () => {
   const canPay = amountPaid >= total && state.cartLines.length > 0;
 
   const handleAddPayment = () => {
-    const method = state.availablePaymentMethods.find((m) => m.id === selectedMethodId);
+    const method = state.availablePaymentMethods.find(
+      (m) => m.id === selectedMethodId,
+    );
     if (!method) return;
     const amount = numInput ? parseFloat(numInput) : remaining;
     if (!amount || amount <= 0) return;
-    const payment: ActivePayment = { methodId: method.id, methodName: method.name, amount };
+    const payment: ActivePayment = {
+      methodId: method.id,
+      methodName: method.name,
+      amount,
+    };
     dispatch({ type: 'ADD_PAYMENT', payment });
     setNumInput('');
   };
 
   const handleNumPress = (char: string) => {
-    if (char === 'del') { setNumInput((p) => p.slice(0, -1)); return; }
+    if (char === 'del') {
+      setNumInput((p) => p.slice(0, -1));
+      return;
+    }
     if (char === '.' && numInput.includes('.')) return;
     setNumInput((p) => p + char);
   };
 
-  const DIGITS = ['1','2','3','4','5','6','7','8','9','+/-','0','.'];
+  const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '+/-', '0', '.'];
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 gap-4">
@@ -47,12 +56,22 @@ export const PaymentScreen = () => {
         <CardContent className="flex-1 flex flex-col overflow-hidden p-4 pt-0">
           <div className="flex-1 overflow-y-auto space-y-1 mb-4">
             {state.cartLines.map((line, i) => (
-              <div key={i} className="flex justify-between text-sm py-1.5 border-b border-border">
+              <div
+                key={i}
+                className="flex justify-between text-sm py-1.5 border-b border-border"
+              >
                 <span className="text-foreground">
                   {line.productName} × {line.qty}
-                  {line.discount > 0 && <span className="text-muted-foreground"> (−{line.discount}%)</span>}
+                  {line.discount > 0 && (
+                    <span className="text-muted-foreground">
+                      {' '}
+                      (−{line.discount}%)
+                    </span>
+                  )}
                 </span>
-                <span className="font-medium">Rp {line.subtotal.toLocaleString()}</span>
+                <span className="font-medium">
+                  Rp {line.subtotal.toLocaleString()}
+                </span>
               </div>
             ))}
           </div>
@@ -64,7 +83,9 @@ export const PaymentScreen = () => {
             </div>
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Paid</span>
-              <span className="text-green-600 dark:text-green-400 font-medium">Rp {amountPaid.toLocaleString()}</span>
+              <span className="text-green-600 dark:text-green-400 font-medium">
+                Rp {amountPaid.toLocaleString()}
+              </span>
             </div>
             {change > 0 ? (
               <div className="flex justify-between text-sm font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 rounded px-2 py-1.5">
@@ -82,9 +103,14 @@ export const PaymentScreen = () => {
           {/* Payment lines */}
           {state.paymentLines.length > 0 && (
             <div className="mt-4">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Payments Applied</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2">
+                Payments Applied
+              </p>
               {state.paymentLines.map((p, i) => (
-                <div key={i} className="flex justify-between items-center text-sm py-1">
+                <div
+                  key={i}
+                  className="flex justify-between items-center text-sm py-1"
+                >
                   <span>{p.methodName}</span>
                   <div className="flex items-center gap-2">
                     <span>Rp {p.amount.toLocaleString()}</span>
@@ -92,7 +118,9 @@ export const PaymentScreen = () => {
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                      onClick={() => dispatch({ type: 'REMOVE_PAYMENT', index: i })}
+                      onClick={() =>
+                        dispatch({ type: 'REMOVE_PAYMENT', index: i })
+                      }
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -109,7 +137,9 @@ export const PaymentScreen = () => {
         {/* Method selector */}
         <Card>
           <CardContent className="p-3">
-            <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Payment Method</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase mb-2">
+              Payment Method
+            </p>
             <div className="grid grid-cols-1 gap-1.5">
               {state.availablePaymentMethods.map((m) => (
                 <Button
@@ -128,22 +158,37 @@ export const PaymentScreen = () => {
         {/* Amount numpad */}
         <Card>
           <CardContent className="p-3">
-            <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Amount</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase mb-2">
+              Amount
+            </p>
             <div className="bg-muted rounded-lg px-3 py-2 text-right font-mono text-lg font-bold text-foreground mb-2 min-h-[44px]">
               {numInput || `Rp ${remaining.toLocaleString()}`}
             </div>
             <div className="grid grid-cols-3 gap-1 mb-1">
               {DIGITS.map((c) => (
-                <Button key={c} variant="outline" onClick={() => handleNumPress(c)} className="h-10 text-sm font-medium">
+                <Button
+                  key={c}
+                  variant="outline"
+                  onClick={() => handleNumPress(c)}
+                  className="h-10 text-sm font-medium"
+                >
                   {c}
                 </Button>
               ))}
             </div>
             <div className="grid grid-cols-2 gap-1 mt-1">
-              <Button variant="outline" onClick={() => handleNumPress('del')} className="h-10 text-destructive border-destructive/30 hover:bg-destructive/10">
+              <Button
+                variant="outline"
+                onClick={() => handleNumPress('del')}
+                className="h-10 text-destructive border-destructive/30 hover:bg-destructive/10"
+              >
                 ⌫
               </Button>
-              <Button onClick={handleAddPayment} disabled={!selectedMethodId} className="h-10">
+              <Button
+                onClick={handleAddPayment}
+                disabled={!selectedMethodId}
+                className="h-10"
+              >
                 Add
               </Button>
             </div>
@@ -167,7 +212,9 @@ export const PaymentScreen = () => {
         </Button>
 
         {state.error && (
-          <p className="text-destructive text-sm text-center bg-destructive/10 rounded-lg p-2">{state.error}</p>
+          <p className="text-destructive text-sm text-center bg-destructive/10 rounded-lg p-2">
+            {state.error}
+          </p>
         )}
       </div>
     </div>

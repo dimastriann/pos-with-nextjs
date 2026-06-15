@@ -71,7 +71,9 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
         <h1 className="text-xl font-bold text-white tracking-wider">
           POS-FLOW<span className="text-sidebar-primary">.</span>
         </h1>
-        <p className="text-xs text-sidebar-foreground/50 mt-1">Admin Workspace</p>
+        <p className="text-xs text-sidebar-foreground/50 mt-1">
+          Admin Workspace
+        </p>
       </div>
 
       {/* Nav */}

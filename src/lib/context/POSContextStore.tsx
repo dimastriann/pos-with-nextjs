@@ -1,5 +1,11 @@
 'use client';
-import { createContext, useContext, useReducer, useEffect, Dispatch } from 'react';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  Dispatch,
+} from 'react';
 import { POSState, POSAction } from '@/types/POSContext';
 import { posReducer, initialPOSState } from './posReducer';
 import { paymentMethodRepository } from '@/repositories/paymentMethodRepository';
@@ -20,7 +26,11 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  return <POSContext.Provider value={{ state, dispatch }}>{children}</POSContext.Provider>;
+  return (
+    <POSContext.Provider value={{ state, dispatch }}>
+      {children}
+    </POSContext.Provider>
+  );
 }
 
 export function usePOS(): POSContextValue {

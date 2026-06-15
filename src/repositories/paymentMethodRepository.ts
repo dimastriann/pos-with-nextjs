@@ -11,7 +11,10 @@ export const paymentMethodRepository = {
     adapter.getById<PaymentMethod>(RESOURCE_KEYS.PAYMENT_METHODS, id),
 
   create: (data: Omit<PaymentMethod, 'id'>): Promise<PaymentMethod> =>
-    adapter.create(RESOURCE_KEYS.PAYMENT_METHODS, { ...data, id: generateId() }),
+    adapter.create(RESOURCE_KEYS.PAYMENT_METHODS, {
+      ...data,
+      id: generateId(),
+    }),
 
   update: (data: PaymentMethod): Promise<PaymentMethod> =>
     adapter.update(RESOURCE_KEYS.PAYMENT_METHODS, data),

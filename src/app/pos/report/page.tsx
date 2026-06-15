@@ -4,7 +4,14 @@ import { orderRepository } from '@/repositories/orderRepository';
 import { PosOrder } from '@/models/PosModels';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 type Range = 'today' | 'week' | 'month' | 'all';
 
@@ -14,7 +21,10 @@ function filterByRange(orders: PosOrder[], range: Range): PosOrder[] {
     const d = new Date(o.date);
     if (range === 'today') return d.toDateString() === now.toDateString();
     if (range === 'week') return now.getTime() - d.getTime() <= 7 * 86400000;
-    if (range === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    if (range === 'month')
+      return (
+        d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+      );
     return true;
   });
 }
@@ -27,7 +37,10 @@ export default function ReportPage() {
     orderRepository.getAll().then(setOrders);
   }, []);
 
-  const filtered = filterByRange(orders.filter((o) => o.status === 'Paid'), range);
+  const filtered = filterByRange(
+    orders.filter((o) => o.status === 'Paid'),
+    range,
+  );
   const totalSales = filtered.reduce((s, o) => s + o.totalAmount, 0);
 
   const ranges: { label: string; value: Range }[] = [
@@ -40,8 +53,12 @@ export default function ReportPage() {
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-foreground mb-1">Sales Report</h1>
-        <p className="text-muted-foreground text-sm mb-6">Overview of completed transactions</p>
+        <h1 className="text-2xl font-bold text-foreground mb-1">
+          Sales Report
+        </h1>
+        <p className="text-muted-foreground text-sm mb-6">
+          Overview of completed transactions
+        </p>
 
         {/* Range selector */}
         <div className="flex flex-wrap gap-1 bg-muted p-1 rounded-lg w-fit mb-6">
@@ -63,13 +80,17 @@ export default function ReportPage() {
           <Card>
             <CardContent className="p-5">
               <p className="text-sm text-muted-foreground">Total Sales</p>
-              <p className="text-2xl font-bold text-primary mt-1">Rp {totalSales.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-primary mt-1">
+                Rp {totalSales.toLocaleString()}
+              </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-5">
               <p className="text-sm text-muted-foreground">Orders</p>
-              <p className="text-2xl font-bold text-foreground mt-1">{filtered.length}</p>
+              <p className="text-2xl font-bold text-foreground mt-1">
+                {filtered.length}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -88,7 +109,10 @@ export default function ReportPage() {
             <TableBody>
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                  <TableCell
+                    colSpan={4}
+                    className="text-center py-10 text-muted-foreground"
+                  >
                     No orders found
                   </TableCell>
                 </TableRow>
@@ -99,8 +123,12 @@ export default function ReportPage() {
                     #{o.id.slice(0, 8).toUpperCase()}
                   </TableCell>
                   <TableCell>{o.customerName || 'Guest'}</TableCell>
-                  <TableCell className="text-muted-foreground">{new Date(o.date).toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-medium">Rp {o.totalAmount.toLocaleString()}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(o.date).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    Rp {o.totalAmount.toLocaleString()}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

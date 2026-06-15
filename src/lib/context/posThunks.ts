@@ -6,9 +6,15 @@ import { PosOrder, PosOrderLine, PosPayment } from '@/models/PosModels';
 import { computeCartTotal } from '@/lib/utils/cartCalculations';
 import { generateId } from '@/lib/utils/generateId';
 
-export async function processPayment(state: POSState, dispatch: Dispatch<POSAction>): Promise<void> {
+export async function processPayment(
+  state: POSState,
+  dispatch: Dispatch<POSAction>,
+): Promise<void> {
   if (!state.activeSession) {
-    dispatch({ type: 'SET_ERROR', error: 'No active session. Please open a session first.' });
+    dispatch({
+      type: 'SET_ERROR',
+      error: 'No active session. Please open a session first.',
+    });
     return;
   }
 
