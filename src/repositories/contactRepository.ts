@@ -18,4 +18,25 @@ export const contactRepository = {
 
   delete: (id: string): Promise<void> =>
     adapter.delete(RESOURCE_KEYS.CONTACTS, id),
+
+  earnPoints: async (id: string, amount: number): Promise<void> => {
+    const contact = await adapter.getById<Contact>(RESOURCE_KEYS.CONTACTS, id);
+    if (!contact) return;
+    const earned = Math.floor(amount / 10000);
+    if (earned <= 0) return;
+    await adapter.update(RESOURCE_KEYS.CONTACTS, {
+      ...contact,
+      loyaltyPoints: (contact.loyaltyPoints ?? 0) + earned,
+    });
+  },
+
+  redeemPoints: async (id: string, points: number): Promise<void> => {
+    const contact = await adapter.getById<Contact>(RESOURCE_KEYS.CONTACTS, id);
+    if (!contact) return;
+    const current = contact.loyaltyPoints ?? 0;
+    await adapter.update(RESOURCE_KEYS.CONTACTS, {
+      ...contact,
+      loyaltyPoints: Math.max(0, current - points),
+    });
+  },
 };

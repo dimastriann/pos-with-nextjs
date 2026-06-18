@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { usePOS } from '@/lib/context/POSContextStore';
 import { processPayment } from '@/lib/context/posThunks';
-import { computeCartTotal, computeChange } from '@/lib/utils/cartCalculations';
+import { computeOrderTotal, computeChange } from '@/lib/utils/cartCalculations';
 import { ActivePayment } from '@/models/CartModels';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,25 +13,39 @@ export const PaymentScreen = () => {
   const [numInput, setNumInput] = useState('');
   const [selectedMethodId, setSelectedMethodId] = useState<string>('');
 
-  const total = computeCartTotal(state.cartLines);
+  const total = computeOrderTotal(state.cartLines, state.orderDiscount);
   const amountPaid = state.paymentLines.reduce((s, p) => s + p.amount, 0);
   const remaining = Math.max(0, total - amountPaid);
   const change = computeChange(total, amountPaid);
   const canPay = amountPaid >= total && state.cartLines.length > 0;
 
   const handleAddPayment = () => {
+    let methodId: string;
+    let methodName: string;
+
+    if (selectedMethodId === '__points__' && state.customer) {
+      const maxRedeemable = (state.customer.loyaltyPoints ?? 0) * 1000;
+      const raw = numInput ? parseFloat(numInput) : Math.min(remaining, maxRedeemable);
+      // Floor to nearest 1,000 so 1 point (= Rp 1,000) is always a whole unit
+      const amount = Math.floor(Math.min(raw, maxRedeemable) / 1000) * 1000;
+      if (!amount || amount <= 0) return;
+      dispatch({
+        type: 'ADD_PAYMENT',
+        payment: { methodId: '__points__', methodName: 'Points', amount },
+      });
+      setNumInput('');
+      return;
+    }
+
     const method = state.availablePaymentMethods.find(
       (m) => m.id === selectedMethodId,
     );
     if (!method) return;
+    methodId = method.id;
+    methodName = method.name;
     const amount = numInput ? parseFloat(numInput) : remaining;
     if (!amount || amount <= 0) return;
-    const payment: ActivePayment = {
-      methodId: method.id,
-      methodName: method.name,
-      amount,
-    };
-    dispatch({ type: 'ADD_PAYMENT', payment });
+    dispatch({ type: 'ADD_PAYMENT', payment: { methodId, methodName, amount } });
     setNumInput('');
   };
 
@@ -77,6 +91,26 @@ export const PaymentScreen = () => {
           </div>
 
           <div className="border-t border-border pt-3 space-y-1.5">
+            {state.orderDiscount > 0 && (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Subtotal</span>
+                <span>
+                  Rp{' '}
+                  {computeOrderTotal(state.cartLines, 0).toLocaleString()}
+                </span>
+              </div>
+            )}
+            {state.orderDiscount > 0 && (
+              <div className="flex justify-between text-sm text-green-700 dark:text-green-400">
+                <span>Order Discount ({state.orderDiscount}%)</span>
+                <span>
+                  − Rp{' '}
+                  {(
+                    computeOrderTotal(state.cartLines, 0) - total
+                  ).toLocaleString()}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-base">
               <span>Total</span>
               <span className="text-primary">Rp {total.toLocaleString()}</span>
@@ -151,6 +185,24 @@ export const PaymentScreen = () => {
                   {m.name}
                 </Button>
               ))}
+              {/* Points redemption — only shown when customer has points */}
+              {state.customer && (state.customer.loyaltyPoints ?? 0) > 0 && (
+                <Button
+                  variant={
+                    selectedMethodId === '__points__' ? 'default' : 'outline'
+                  }
+                  className="w-full justify-between text-primary border-primary/40"
+                  onClick={() => setSelectedMethodId('__points__')}
+                >
+                  <span>Redeem Points</span>
+                  <span className="text-xs font-normal">
+                    {state.customer.loyaltyPoints} pts = Rp{' '}
+                    {(
+                      (state.customer.loyaltyPoints ?? 0) * 1000
+                    ).toLocaleString()}
+                  </span>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

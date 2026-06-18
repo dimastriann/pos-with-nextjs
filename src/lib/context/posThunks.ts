@@ -1,9 +1,13 @@
 import { Dispatch } from 'react';
 import { POSAction, POSState } from '@/types/POSContext';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { orderRepository } from '@/repositories/orderRepository';
 import { sessionRepository } from '@/repositories/sessionRepository';
+import { productRepository } from '@/repositories/productRepository';
+import { contactRepository } from '@/repositories/contactRepository';
 import { PosOrder, PosOrderLine, PosPayment } from '@/models/PosModels';
-import { computeCartTotal } from '@/lib/utils/cartCalculations';
+import { computeOrderTotal } from '@/lib/utils/cartCalculations';
+
 import { generateId } from '@/lib/utils/generateId';
 
 export async function processPayment(
@@ -23,7 +27,7 @@ export async function processPayment(
   try {
     const orderId = generateId();
     const now = new Date().toISOString();
-    const total = computeCartTotal(state.cartLines);
+    const total = computeOrderTotal(state.cartLines, state.orderDiscount);
 
     const order: PosOrder = {
       id: orderId,
@@ -58,6 +62,30 @@ export async function processPayment(
 
     await orderRepository.createWithLines(order, lines, payments);
 
+    await Promise.all(
+      state.cartLines.map((l) =>
+        productRepository.decrementStock(l.productId, l.qty),
+      ),
+    );
+
+    // Loyalty: redeem points used as payment, then earn points on full order total
+    if (state.customer?.id) {
+      const pointsPayment = payments.find((p) =>
+        p.methodName.toLowerCase().includes('points'),
+      );
+      if (pointsPayment) {
+        // amount is already a multiple of 1,000 (enforced in PaymentScreen)
+        const pointsUsed = Math.floor(pointsPayment.amount / 1000);
+        await contactRepository.redeemPoints(state.customer.id, pointsUsed);
+      }
+      // Earn on the full order total regardless of how it was paid
+      await contactRepository.earnPoints(state.customer.id, total);
+
+      // Refresh customer in state so the next transaction sees updated points
+      const updatedCustomer = await contactRepository.getById(state.customer.id);
+      if (updatedCustomer) dispatch({ type: 'SET_CUSTOMER', customer: updatedCustomer });
+    }
+
     const cashPaid = payments
       .filter((p) => p.methodName.toLowerCase().includes('cash'))
       .reduce((s, p) => s + p.amount, 0);
@@ -71,6 +99,25 @@ export async function processPayment(
       type: 'GOTO_RECEIPT',
       order: { ...order, lines, payments },
     });
+  } catch (err) {
+    dispatch({ type: 'SET_ERROR', error: (err as Error).message });
+  } finally {
+    dispatch({ type: 'SET_LOADING', loading: false });
+  }
+}
+
+export async function closeSessionThunk(
+  state: POSState,
+  dispatch: Dispatch<POSAction>,
+  router: AppRouterInstance,
+): Promise<void> {
+  if (!state.activeSession) return;
+  dispatch({ type: 'SET_LOADING', loading: true });
+  try {
+    const sessionId = state.activeSession.id;
+    await sessionRepository.closeSession(sessionId);
+    dispatch({ type: 'SESSION_END' });
+    router.push(`/pos/zreport?sessionId=${sessionId}`);
   } catch (err) {
     dispatch({ type: 'SET_ERROR', error: (err as Error).message });
   } finally {

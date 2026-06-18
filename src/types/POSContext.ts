@@ -12,6 +12,7 @@ export interface POSState {
   cartLines: CartLine[];
   selectedLineIndex: number | null;
   customer: Contact | null;
+  orderDiscount: number; // percentage 0-100 applied after line discounts
   numpadMode: NumpadMode;
   numpadInput: string;
   paymentLines: ActivePayment[];
@@ -27,6 +28,7 @@ export type POSAction =
   | { type: 'REMOVE_LINE'; index: number }
   | { type: 'SELECT_LINE'; index: number | null }
   | { type: 'SET_CUSTOMER'; customer: Contact | null }
+  | { type: 'SET_ORDER_DISCOUNT'; discount: number }
   | { type: 'CLEAR_ORDER' }
   | { type: 'NUMPAD_PRESS'; char: string }
   | { type: 'SET_NUMPAD_MODE'; mode: NumpadMode }

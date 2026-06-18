@@ -10,8 +10,9 @@ const createJestConfig = nextJest({
 const config: Config = {
   coverageProvider: 'v8',
   testEnvironment: 'jsdom',
-  // Only pick up *.test.* files so helper files in __tests__/ aren't run as suites
-  testMatch: ['**/__tests__/**/*.test.[jt]s?(x)', '**/*.spec.[jt]s?(x)'],
+  // Only pick up *.test.* files; exclude Playwright e2e specs
+  testMatch: ['**/__tests__/**/*.test.[jt]s?(x)', 'src/**/*.spec.[jt]s?(x)'],
+  testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
   // Explicit alias mapping so jest.mock('@/…') resolves correctly
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

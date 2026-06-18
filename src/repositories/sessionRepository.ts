@@ -31,6 +31,16 @@ export const sessionRepository = {
     );
   },
 
+  closeSession: async (id: string): Promise<PosSession> => {
+    const session = await adapter.getById<PosSession>(RESOURCE_KEYS.SESSIONS, id);
+    if (!session) throw new Error('Session not found');
+    return adapter.update(RESOURCE_KEYS.SESSIONS, {
+      ...session,
+      status: 'Closed',
+      endAt: new Date().toISOString(),
+    });
+  },
+
   incrementTotals: async (
     id: string,
     delta: { totalOrders: number; totalCash: number },

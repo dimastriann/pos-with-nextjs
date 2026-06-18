@@ -13,8 +13,9 @@ import { productRepository } from '@/repositories/productRepository';
 import { categoryRepository } from '@/repositories/categoryRepository';
 import { useBarcodeScanner } from '@/lib/hooks/useBarcodeScanner';
 import { Product } from '@/models/Product';
-import { Category } from '@/models/MasterData';
-import { computeCartTotal } from '@/lib/utils/cartCalculations';
+import { Category, Contact } from '@/models/MasterData';
+import { computeOrderTotal } from '@/lib/utils/cartCalculations';
+import { contactRepository } from '@/repositories/contactRepository';
 
 export function PosOrderScreen() {
   const { state, dispatch } = usePOS();
@@ -28,14 +29,20 @@ export function PosOrderScreen() {
     ok: boolean;
   } | null>(null);
   const [manualBarcode, setManualBarcode] = useState('');
+  const [customers, setCustomers] = useState<Contact[]>([]);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
 
   useEffect(() => {
-    Promise.all([productRepository.getAll(), categoryRepository.getAll()]).then(
-      ([prods, cats]) => {
-        setProducts(prods);
-        setCategories(cats);
-      },
-    );
+    Promise.all([
+      productRepository.getAll(),
+      categoryRepository.getAll(),
+      contactRepository.getAll(),
+    ]).then(([prods, cats, contacts]) => {
+      setProducts(prods);
+      setCategories(cats);
+      setCustomers(contacts.filter((c) => c.type === 'Customer'));
+    });
   }, []);
 
   const handleScan = useCallback(
@@ -62,7 +69,8 @@ export function PosOrderScreen() {
     return matchCat && matchSearch;
   });
 
-  const total = computeCartTotal(state.cartLines);
+  const total = computeOrderTotal(state.cartLines, state.orderDiscount);
+  const [discountInput, setDiscountInput] = useState('');
   const cartCount = state.cartLines.reduce((s, l) => s + l.qty, 0);
 
   const scanBanner = scanFeedback && (
@@ -197,14 +205,87 @@ export function PosOrderScreen() {
 
   const cartPanel = (
     <div className="flex flex-col overflow-hidden h-full">
-      {/* Customer */}
-      <Button
-        variant="default"
-        className="w-full mb-2 text-sm flex-shrink-0"
-        onClick={() => alert('Customer lookup coming soon')}
-      >
-        {state.customer ? state.customer.name : '+ Add Customer'}
-      </Button>
+      {/* Customer selector */}
+      <div className="mb-2 flex-shrink-0">
+        {showCustomerSearch ? (
+          <div className="border border-border rounded-lg p-2 bg-card space-y-1.5">
+            <Input
+              autoFocus
+              placeholder="Search customer…"
+              value={customerSearch}
+              onChange={(e) => setCustomerSearch(e.target.value)}
+              className="h-7 text-sm"
+            />
+            <div className="max-h-32 overflow-y-auto space-y-0.5">
+              {customers
+                .filter((c) =>
+                  c.name.toLowerCase().includes(customerSearch.toLowerCase()),
+                )
+                .slice(0, 8)
+                .map((c) => (
+                  <button
+                    key={c.id}
+                    className="w-full text-left px-2 py-1 text-sm rounded hover:bg-accent transition-colors flex justify-between items-center"
+                    onClick={() => {
+                      dispatch({ type: 'SET_CUSTOMER', customer: c });
+                      setShowCustomerSearch(false);
+                      setCustomerSearch('');
+                    }}
+                  >
+                    <span>{c.name}</span>
+                    {(c.loyaltyPoints ?? 0) > 0 && (
+                      <span className="text-xs text-primary font-medium">
+                        {c.loyaltyPoints} pts
+                      </span>
+                    )}
+                  </button>
+                ))}
+              {customers.filter((c) =>
+                c.name.toLowerCase().includes(customerSearch.toLowerCase()),
+              ).length === 0 && (
+                <p className="text-xs text-muted-foreground px-2 py-1">
+                  No customers found
+                </p>
+              )}
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full h-6 text-xs"
+              onClick={() => setShowCustomerSearch(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant={state.customer ? 'secondary' : 'default'}
+              className="flex-1 text-sm h-8"
+              onClick={() => setShowCustomerSearch(true)}
+            >
+              {state.customer ? state.customer.name : '+ Add Customer'}
+            </Button>
+            {state.customer && (
+              <button
+                className="text-muted-foreground hover:text-destructive transition-colors"
+                onClick={() =>
+                  dispatch({ type: 'SET_CUSTOMER', customer: null })
+                }
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        )}
+        {state.customer && (state.customer.loyaltyPoints ?? 0) > 0 && (
+          <p className="text-xs text-primary mt-1 px-1">
+            {state.customer.loyaltyPoints} pts available (Rp{' '}
+            {((state.customer.loyaltyPoints ?? 0) * 1000).toLocaleString()}{' '}
+            value)
+          </p>
+        )}
+      </div>
 
       {/* Order lines */}
       <div className="flex-1 overflow-y-auto space-y-1 mb-2 min-h-0">
@@ -258,6 +339,17 @@ export function PosOrderScreen() {
 
       {/* Total */}
       <div className="border-t border-border pt-2 mb-1 flex-shrink-0">
+        {state.orderDiscount > 0 && (
+          <div className="flex justify-between items-center text-xs text-green-700 dark:text-green-400 mb-0.5">
+            <span>Disc {state.orderDiscount}%</span>
+            <span>
+              −Rp{' '}
+              {(
+                computeOrderTotal(state.cartLines, 0) - total
+              ).toLocaleString()}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between items-center font-bold text-base">
           <span>Total</span>
           <span className="text-primary">Rp {total.toLocaleString()}</span>
@@ -305,14 +397,43 @@ export function PosOrderScreen() {
           >
             Note
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-xs"
-            onClick={() => alert('Discount coming soon')}
-          >
-            Disc %
-          </Button>
+          <div className="flex flex-col gap-0.5">
+            <Button
+              size="sm"
+              variant={state.orderDiscount > 0 ? 'default' : 'outline'}
+              className="text-xs"
+              onClick={() => {
+                const v = parseFloat(discountInput);
+                if (!isNaN(v) && v >= 0 && v <= 100) {
+                  dispatch({ type: 'SET_ORDER_DISCOUNT', discount: v });
+                  setDiscountInput('');
+                }
+              }}
+            >
+              {state.orderDiscount > 0
+                ? `Disc ${state.orderDiscount}%`
+                : 'Disc %'}
+            </Button>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={discountInput}
+              onChange={(e) => setDiscountInput(e.target.value)}
+              placeholder="%"
+              className="w-full text-xs text-center border border-border rounded px-1 py-0.5 bg-background text-foreground [appearance:textfield]"
+            />
+            {state.orderDiscount > 0 && (
+              <button
+                className="text-xs text-destructive underline"
+                onClick={() =>
+                  dispatch({ type: 'SET_ORDER_DISCOUNT', discount: 0 })
+                }
+              >
+                clear
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Order panel */}

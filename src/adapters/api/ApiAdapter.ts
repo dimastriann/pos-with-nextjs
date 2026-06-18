@@ -2,6 +2,9 @@ import { IBackendAdapter, AuthResult } from '@/adapters/IBackendAdapter';
 import { User } from '@/models/User';
 import { ApiError } from './ApiError';
 
+const TOKEN_KEY = 'pos_token';
+const REFRESH_KEY = 'pos_refresh_token';
+
 /**
  * REST API adapter — connect this to any backend that follows the contract:
  *
@@ -10,7 +13,8 @@ import { ApiError } from './ApiError';
  *   POST   /{resource}        → T  (body: T)
  *   PUT    /{resource}/:id    → T  (body: T)
  *   DELETE /{resource}/:id    → 204
- *   POST   /auth/login        → { user: User, token: string }
+ *   POST   /auth/login        → { user: User, token: string, refreshToken?: string }
+ *   POST   /auth/refresh      → { token: string, refreshToken?: string }
  *   POST   /auth/logout       → 204
  *   GET    /auth/me           → User
  *
@@ -21,7 +25,7 @@ export class ApiAdapter implements IBackendAdapter {
 
   constructor(private baseUrl: string) {
     if (typeof window !== 'undefined') {
-      this.token = sessionStorage.getItem('pos_token');
+      this.token = sessionStorage.getItem(TOKEN_KEY);
     }
   }
 
@@ -31,16 +35,60 @@ export class ApiAdapter implements IBackendAdapter {
     return h;
   }
 
+  private storeTokens(token: string, refreshToken?: string) {
+    this.token = token;
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(TOKEN_KEY, token);
+      if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+    }
+  }
+
+  private clearTokens() {
+    this.token = null;
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_KEY);
+    }
+  }
+
+  private async tryRefresh(): Promise<boolean> {
+    const refreshToken =
+      typeof window !== 'undefined' ? localStorage.getItem(REFRESH_KEY) : null;
+    if (!refreshToken) return false;
+    try {
+      const res = await fetch(`${this.baseUrl}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) return false;
+      const data: { token: string; refreshToken?: string } = await res.json();
+      this.storeTokens(data.token, data.refreshToken);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   private async request<T>(
     method: string,
     path: string,
     body?: unknown,
+    isRetry = false,
   ): Promise<T> {
     const res = await fetch(`${this.baseUrl}/${path}`, {
       method,
       headers: this.headers(),
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
+
+    // Auto-refresh on 401, but don't loop on auth endpoints
+    if (res.status === 401 && !isRetry && !path.startsWith('auth/')) {
+      const refreshed = await this.tryRefresh();
+      if (refreshed) return this.request<T>(method, path, body, true);
+      this.clearTokens();
+    }
+
     if (!res.ok) {
       const text = await res.text().catch(() => res.statusText);
       throw new ApiError(res.status, text);
@@ -62,17 +110,11 @@ export class ApiAdapter implements IBackendAdapter {
     }
   }
 
-  async create<T extends { id: string }>(
-    resource: string,
-    item: T,
-  ): Promise<T> {
+  async create<T extends { id: string }>(resource: string, item: T): Promise<T> {
     return this.request<T>('POST', resource, item);
   }
 
-  async update<T extends { id: string }>(
-    resource: string,
-    item: T,
-  ): Promise<T> {
+  async update<T extends { id: string }>(resource: string, item: T): Promise<T> {
     return this.request<T>('PUT', `${resource}/${item.id}`, item);
   }
 
@@ -82,18 +124,12 @@ export class ApiAdapter implements IBackendAdapter {
 
   async login(username: string, password: string): Promise<AuthResult> {
     try {
-      const data = await this.request<{ user: User; token: string }>(
-        'POST',
-        'auth/login',
-        {
-          username,
-          password,
-        },
-      );
-      this.token = data.token;
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('pos_token', data.token);
-      }
+      const data = await this.request<{
+        user: User;
+        token: string;
+        refreshToken?: string;
+      }>('POST', 'auth/login', { username, password });
+      this.storeTokens(data.token, data.refreshToken);
       return { success: true, user: data.user };
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : 'Login failed';
@@ -105,8 +141,7 @@ export class ApiAdapter implements IBackendAdapter {
     try {
       await this.request<void>('POST', 'auth/logout');
     } finally {
-      this.token = null;
-      if (typeof window !== 'undefined') sessionStorage.removeItem('pos_token');
+      this.clearTokens();
     }
   }
 

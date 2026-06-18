@@ -26,7 +26,7 @@ export const ReceiptScreen = () => {
   const change = computeChange(order.totalAmount, amountPaid);
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-muted/30 p-4">
+    <div id="receipt-print" className="flex-1 flex items-center justify-center bg-muted/30 p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}

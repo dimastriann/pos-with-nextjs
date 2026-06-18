@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { PwaInit } from '@/components/providers/PwaInit';
 import './globals.css';
 
 const geistSans = Geist({
@@ -14,8 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'POS Flow App',
-  description: 'Point of Sale Flow App',
+  title: 'POS Flow',
+  description: 'Frontend-only Point of Sale boilerplate',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -33,6 +35,7 @@ export default function RootLayout({
           defaultTheme="light"
           disableTransitionOnChange
         >
+          <PwaInit />
           {children}
         </ThemeProvider>
       </body>
