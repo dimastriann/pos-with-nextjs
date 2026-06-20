@@ -32,7 +32,10 @@ export const sessionRepository = {
   },
 
   closeSession: async (id: string): Promise<PosSession> => {
-    const session = await adapter.getById<PosSession>(RESOURCE_KEYS.SESSIONS, id);
+    const session = await adapter.getById<PosSession>(
+      RESOURCE_KEYS.SESSIONS,
+      id,
+    );
     if (!session) throw new Error('Session not found');
     return adapter.update(RESOURCE_KEYS.SESSIONS, {
       ...session,

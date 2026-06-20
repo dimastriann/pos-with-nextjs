@@ -25,7 +25,9 @@ export const PaymentScreen = () => {
 
     if (selectedMethodId === '__points__' && state.customer) {
       const maxRedeemable = (state.customer.loyaltyPoints ?? 0) * 1000;
-      const raw = numInput ? parseFloat(numInput) : Math.min(remaining, maxRedeemable);
+      const raw = numInput
+        ? parseFloat(numInput)
+        : Math.min(remaining, maxRedeemable);
       // Floor to nearest 1,000 so 1 point (= Rp 1,000) is always a whole unit
       const amount = Math.floor(Math.min(raw, maxRedeemable) / 1000) * 1000;
       if (!amount || amount <= 0) return;
@@ -45,7 +47,10 @@ export const PaymentScreen = () => {
     methodName = method.name;
     const amount = numInput ? parseFloat(numInput) : remaining;
     if (!amount || amount <= 0) return;
-    dispatch({ type: 'ADD_PAYMENT', payment: { methodId, methodName, amount } });
+    dispatch({
+      type: 'ADD_PAYMENT',
+      payment: { methodId, methodName, amount },
+    });
     setNumInput('');
   };
 
@@ -95,8 +100,7 @@ export const PaymentScreen = () => {
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Subtotal</span>
                 <span>
-                  Rp{' '}
-                  {computeOrderTotal(state.cartLines, 0).toLocaleString()}
+                  Rp {computeOrderTotal(state.cartLines, 0).toLocaleString()}
                 </span>
               </div>
             )}

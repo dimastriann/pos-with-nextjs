@@ -8,6 +8,21 @@ import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const TYPE_BADGE: Record<string, string> = {
+  Cash: 'bg-success-50 text-success-600 dark:bg-success-500/[0.12] dark:text-success-400',
+  Bank: 'bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400',
+  'E-Wallet':
+    'bg-warning-50 text-warning-600 dark:bg-warning-500/[0.12] dark:text-warning-600',
+};
 
 export default function PaymentMethodsPage() {
   const [data, setData] = useState<PaymentMethod[]>([]);
@@ -27,7 +42,6 @@ export default function PaymentMethodsPage() {
       loadData();
     }
   };
-
   const handleEdit = (item: PaymentMethod) => {
     setFormData(item);
     setIsModalOpen(true);
@@ -44,8 +58,8 @@ export default function PaymentMethodsPage() {
       if (formData.id) {
         await paymentMethodRepository.update(formData as PaymentMethod);
       } else {
-        const { id: _, ...data } = formData as PaymentMethod;
-        await paymentMethodRepository.create(data);
+        const { id: _, ...d } = formData as PaymentMethod;
+        await paymentMethodRepository.create(d);
       }
       setIsModalOpen(false);
       loadData();
@@ -64,8 +78,17 @@ export default function PaymentMethodsPage() {
     },
     {
       header: 'Type',
-      accessor: 'type' as keyof PaymentMethod,
-      className: 'text-muted-foreground',
+      accessor: (p: PaymentMethod) => (
+        <Badge
+          variant="secondary"
+          className={
+            TYPE_BADGE[p.type] ??
+            'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+          }
+        >
+          {p.type}
+        </Badge>
+      ),
     },
   ];
 
@@ -106,7 +129,7 @@ export default function PaymentMethodsPage() {
         title={formData.id ? 'Edit Method' : 'New Payment Method'}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="space-y-1.5">
             <Label>Name</Label>
             <Input
               required
@@ -117,24 +140,25 @@ export default function PaymentMethodsPage() {
               placeholder="e.g. Credit Card"
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label>Type</Label>
-            <select
-              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              value={formData.type}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  type: e.target.value as PaymentMethod['type'],
-                })
+            <Select
+              value={formData.type || 'Cash'}
+              onValueChange={(val) =>
+                setFormData({ ...formData, type: val as PaymentMethod['type'] })
               }
             >
-              <option value="Cash">Cash</option>
-              <option value="Bank">Bank Transfer</option>
-              <option value="E-Wallet">E-Wallet</option>
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Cash">Cash</SelectItem>
+                <SelectItem value="Bank">Bank Transfer</SelectItem>
+                <SelectItem value="E-Wallet">E-Wallet</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex gap-3 justify-end pt-4">
+          <div className="flex gap-3 justify-end pt-2 border-t border-border">
             <Button
               type="button"
               variant="outline"

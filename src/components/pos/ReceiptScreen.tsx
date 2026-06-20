@@ -24,9 +24,17 @@ export const ReceiptScreen = () => {
   const payments = order.payments ?? [];
   const amountPaid = payments.reduce((s, p) => s + p.amount, 0);
   const change = computeChange(order.totalAmount, amountPaid);
+  const taxRate = state.activeShop?.taxRate ?? 0;
+  const taxAmount =
+    taxRate > 0
+      ? Math.round(order.totalAmount * (taxRate / (100 + taxRate)))
+      : 0;
 
   return (
-    <div id="receipt-print" className="flex-1 flex items-center justify-center bg-muted/30 p-4">
+    <div
+      id="receipt-print"
+      className="flex-1 flex items-center justify-center bg-muted/30 p-4"
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -91,6 +99,18 @@ export const ReceiptScreen = () => {
 
             {/* Totals */}
             <div className="space-y-1.5 mb-4">
+              {(order.orderDiscount ?? 0) > 0 && (
+                <div className="flex justify-between text-sm text-green-700 dark:text-green-400">
+                  <span>Discount ({order.orderDiscount}%)</span>
+                  <span>−</span>
+                </div>
+              )}
+              {taxRate > 0 && (
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Tax (incl. {taxRate}%)</span>
+                  <span>Rp {taxAmount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-base">
                 <span>Total</span>
                 <span>Rp {order.totalAmount.toLocaleString()}</span>
@@ -112,8 +132,15 @@ export const ReceiptScreen = () => {
               )}
             </div>
 
+            {order.notes && (
+              <p className="text-xs text-muted-foreground mb-3 italic">
+                Note: {order.notes}
+              </p>
+            )}
+
             <p className="text-center text-xs text-muted-foreground mb-4">
-              Thank you for your purchase!
+              {state.activeShop?.receiptFooter ||
+                'Thank you for your purchase!'}
             </p>
 
             {/* Actions */}

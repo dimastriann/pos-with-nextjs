@@ -13,6 +13,7 @@ export const initialPOSState: POSState = {
   selectedLineIndex: null,
   customer: null,
   orderDiscount: 0,
+  orderNotes: '',
   numpadMode: 'qty',
   numpadInput: '',
   paymentLines: [],
@@ -100,6 +101,9 @@ export function posReducer(state: POSState, action: POSAction): POSState {
         orderDiscount: Math.min(100, Math.max(0, action.discount)),
       };
 
+    case 'SET_ORDER_NOTES':
+      return { ...state, orderNotes: action.notes };
+
     case 'CLEAR_ORDER':
       return {
         ...state,
@@ -107,6 +111,7 @@ export function posReducer(state: POSState, action: POSAction): POSState {
         selectedLineIndex: null,
         customer: null,
         orderDiscount: 0,
+        orderNotes: '',
         numpadInput: '',
         paymentLines: [],
       };
@@ -205,6 +210,7 @@ export function posReducer(state: POSState, action: POSAction): POSState {
         paymentLines: [],
         customer: null,
         orderDiscount: 0,
+        orderNotes: '',
         selectedLineIndex: null,
         numpadInput: '',
       };

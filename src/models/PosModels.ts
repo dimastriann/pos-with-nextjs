@@ -3,6 +3,10 @@ export interface PosShop {
   name: string;
   address?: string;
   phone?: string;
+  email?: string;
+  logoUrl?: string;
+  taxRate?: number;
+  receiptFooter?: string;
   active: boolean;
 }
 
@@ -45,6 +49,8 @@ export interface PosOrder {
   customerName?: string;
   date: string;
   totalAmount: number;
+  orderDiscount?: number;
+  notes?: string;
   status: 'Draft' | 'Paid' | 'Cancelled' | 'Refunded';
   lines?: PosOrderLine[]; // Optional for list view, required for form
   payments?: PosPayment[]; // Optional for list view

@@ -28,5 +28,7 @@ export const OrderSchema = z.object({
   customerName: z.string().optional(),
   date: z.string(),
   totalAmount: z.number().min(0),
+  orderDiscount: z.number().min(0).max(100).optional(),
+  notes: z.string().optional(),
   status: z.enum(['Draft', 'Paid', 'Cancelled', 'Refunded']),
 });

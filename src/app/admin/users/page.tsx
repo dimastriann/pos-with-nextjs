@@ -8,6 +8,23 @@ import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const ROLE_BADGE: Record<string, string> = {
+  admin:
+    'bg-brand-50 text-brand-600 dark:bg-brand-500/[0.12] dark:text-brand-400',
+  manager:
+    'bg-blue-light-50 text-blue-light-500 dark:bg-blue-light-500/[0.12] dark:text-blue-light-500',
+  cashier:
+    'bg-success-50 text-success-600 dark:bg-success-500/[0.12] dark:text-success-400',
+};
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -27,7 +44,6 @@ export default function UsersPage() {
       loadData();
     }
   };
-
   const handleEdit = (user: User) => {
     setCurrentUser(user);
     setIsModalOpen(true);
@@ -65,9 +81,23 @@ export default function UsersPage() {
     { header: 'Username', accessor: 'username' as keyof User },
     {
       header: 'Role',
-      accessor: (u: User) => <span className="capitalize">{u.role}</span>,
+      accessor: (u: User) => (
+        <Badge
+          variant="secondary"
+          className={
+            ROLE_BADGE[u.role] ??
+            'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+          }
+        >
+          {u.role}
+        </Badge>
+      ),
     },
-    { header: 'Shop ID', accessor: (u: User) => u.shopId || '-' },
+    {
+      header: 'Shop ID',
+      accessor: (u: User) =>
+        u.shopId || <span className="text-muted-foreground">—</span>,
+    },
   ];
 
   return (
@@ -107,7 +137,7 @@ export default function UsersPage() {
         title={currentUser.id ? 'Edit User' : 'New User'}
       >
         <form onSubmit={handleSave} className="space-y-4">
-          <div>
+          <div className="space-y-1.5">
             <Label>Name</Label>
             <Input
               required
@@ -117,7 +147,7 @@ export default function UsersPage() {
               }
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label>Username</Label>
             <Input
               required
@@ -127,7 +157,7 @@ export default function UsersPage() {
               }
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label>Password</Label>
             <Input
               value={currentUser.password || ''}
@@ -137,26 +167,27 @@ export default function UsersPage() {
               placeholder={currentUser.id ? 'Leave blank to keep current' : ''}
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label>Role</Label>
-            <select
-              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              value={currentUser.role}
-              onChange={(e) =>
-                setCurrentUser({
-                  ...currentUser,
-                  role: e.target.value as UserRole,
-                })
+            <Select
+              value={currentUser.role || UserRole.Cashier}
+              onValueChange={(val) =>
+                setCurrentUser({ ...currentUser, role: val as UserRole })
               }
             >
-              {Object.values(UserRole).map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(UserRole).map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label>Shop ID</Label>
             <Input
               value={currentUser.shopId || ''}
@@ -166,7 +197,7 @@ export default function UsersPage() {
               placeholder="Optional"
             />
           </div>
-          <div className="flex gap-3 justify-end pt-4">
+          <div className="flex gap-3 justify-end pt-2 border-t border-border">
             <Button
               type="button"
               variant="outline"

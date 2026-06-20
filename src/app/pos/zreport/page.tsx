@@ -42,12 +42,18 @@ function ZReportContent() {
       setOrders(sessionOrders);
 
       const orderIds = new Set(sessionOrders.map((o) => o.id));
-      const sessionPayments = allPayments.filter((p) => orderIds.has(p.orderId));
+      const sessionPayments = allPayments.filter((p) =>
+        orderIds.has(p.orderId),
+      );
 
       const summary = sessionPayments.reduce<Record<string, PaymentSummary>>(
         (acc, p) => {
           if (!acc[p.methodName]) {
-            acc[p.methodName] = { methodName: p.methodName, total: 0, count: 0 };
+            acc[p.methodName] = {
+              methodName: p.methodName,
+              total: 0,
+              count: 0,
+            };
           }
           acc[p.methodName].total += p.amount;
           acc[p.methodName].count += 1;
@@ -95,9 +101,7 @@ function ZReportContent() {
           <h1 className="text-2xl font-bold">Z-Report — End of Day</h1>
           <p className="text-muted-foreground text-sm">
             Session closed:{' '}
-            {session.endAt
-              ? new Date(session.endAt).toLocaleString()
-              : '—'}
+            {session.endAt ? new Date(session.endAt).toLocaleString() : '—'}
           </p>
         </div>
 
@@ -114,9 +118,7 @@ function ZReportContent() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Closed</span>
               <span>
-                {session.endAt
-                  ? new Date(session.endAt).toLocaleString()
-                  : '—'}
+                {session.endAt ? new Date(session.endAt).toLocaleString() : '—'}
               </span>
             </div>
             {duration !== null && (
@@ -179,7 +181,10 @@ function ZReportContent() {
               </thead>
               <tbody>
                 {orders.map((o, i) => (
-                  <tr key={o.id} className="border-b border-border last:border-0">
+                  <tr
+                    key={o.id}
+                    className="border-b border-border last:border-0"
+                  >
                     <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
                       {i + 1}
                     </td>
@@ -215,7 +220,10 @@ function ZReportContent() {
           >
             Print Report
           </Button>
-          <Button className="flex-1" onClick={() => router.push('/pos/session')}>
+          <Button
+            className="flex-1"
+            onClick={() => router.push('/pos/session')}
+          >
             New Session
           </Button>
         </div>

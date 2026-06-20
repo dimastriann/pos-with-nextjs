@@ -110,11 +110,17 @@ export class ApiAdapter implements IBackendAdapter {
     }
   }
 
-  async create<T extends { id: string }>(resource: string, item: T): Promise<T> {
+  async create<T extends { id: string }>(
+    resource: string,
+    item: T,
+  ): Promise<T> {
     return this.request<T>('POST', resource, item);
   }
 
-  async update<T extends { id: string }>(resource: string, item: T): Promise<T> {
+  async update<T extends { id: string }>(
+    resource: string,
+    item: T,
+  ): Promise<T> {
     return this.request<T>('PUT', `${resource}/${item.id}`, item);
   }
 

@@ -63,9 +63,12 @@ export function PosOrderScreen() {
   useBarcodeScanner(handleScan);
 
   const filteredProducts = products.filter((p) => {
+    if (p.active === false) return false;
     const matchCat =
       activeCategoryId === 'all' || p.categoryId === activeCategoryId;
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    const matchSearch =
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.sku ?? '').toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 
@@ -163,17 +166,33 @@ export function PosOrderScreen() {
             transition={{ duration: 0.12 }}
           >
             <Card
-              className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all h-full"
+              className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all h-full overflow-hidden"
               onClick={() => {
                 dispatch({ type: 'ADD_PRODUCT', product });
-                // Auto-switch to cart tab on mobile after adding
                 setMobileTab('cart');
               }}
             >
+              {product.image && (
+                <div className="h-20 w-full bg-muted overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (
+                        e.currentTarget.parentElement as HTMLElement
+                      ).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
               <CardContent className="p-3">
                 <p className="font-semibold text-sm leading-tight text-card-foreground">
                   {product.name}
                 </p>
+                {product.sku && (
+                  <p className="text-xs text-muted-foreground">{product.sku}</p>
+                )}
                 <p className="text-primary font-bold text-sm mt-1">
                   Rp {product.price.toLocaleString()}
                 </p>
@@ -259,6 +278,16 @@ export function PosOrderScreen() {
           </div>
         ) : (
           <div className="flex items-center gap-1.5">
+            {state.customer && (
+              <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0">
+                {state.customer.name
+                  .split(' ')
+                  .map((w) => w[0])
+                  .join('')
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </div>
+            )}
             <Button
               variant={state.customer ? 'secondary' : 'default'}
               className="flex-1 text-sm h-8"
@@ -344,9 +373,7 @@ export function PosOrderScreen() {
             <span>Disc {state.orderDiscount}%</span>
             <span>
               −Rp{' '}
-              {(
-                computeOrderTotal(state.cartLines, 0) - total
-              ).toLocaleString()}
+              {(computeOrderTotal(state.cartLines, 0) - total).toLocaleString()}
             </span>
           </div>
         )}
@@ -389,14 +416,20 @@ export function PosOrderScreen() {
           >
             Clear
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-xs"
-            onClick={() => alert('Note coming soon')}
-          >
-            Note
-          </Button>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] text-muted-foreground text-center">
+              Note
+            </span>
+            <textarea
+              rows={2}
+              value={state.orderNotes}
+              onChange={(e) =>
+                dispatch({ type: 'SET_ORDER_NOTES', notes: e.target.value })
+              }
+              placeholder="…"
+              className="w-full text-xs border border-border rounded px-1 py-0.5 bg-background text-foreground resize-none"
+            />
+          </div>
           <div className="flex flex-col gap-0.5">
             <Button
               size="sm"

@@ -8,6 +8,15 @@ import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function ContactsPage() {
   const [data, setData] = useState<Contact[]>([]);
@@ -27,7 +36,6 @@ export default function ContactsPage() {
       loadData();
     }
   };
-
   const handleEdit = (item: Contact) => {
     setFormData(item);
     setIsModalOpen(true);
@@ -44,8 +52,8 @@ export default function ContactsPage() {
       if (formData.id) {
         await contactRepository.update(formData as Contact);
       } else {
-        const { id: _, ...data } = formData as Contact;
-        await contactRepository.create(data);
+        const { id: _, ...d } = formData as Contact;
+        await contactRepository.create(d);
       }
       setIsModalOpen(false);
       loadData();
@@ -58,13 +66,43 @@ export default function ContactsPage() {
 
   const columns = [
     {
-      header: 'Name',
-      accessor: 'name' as keyof Contact,
-      className: 'font-medium',
+      header: 'Contact',
+      accessor: (c: Contact) => (
+        <div>
+          <div className="font-medium">{c.name}</div>
+          {c.email && (
+            <div className="text-xs text-muted-foreground">{c.email}</div>
+          )}
+        </div>
+      ),
     },
-    { header: 'Type', accessor: 'type' as keyof Contact },
+    {
+      header: 'Type',
+      accessor: (c: Contact) => (
+        <Badge
+          variant="secondary"
+          className={
+            c.type === 'Customer'
+              ? 'bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400'
+              : 'bg-warning-50 text-warning-600 dark:bg-warning-500/[0.12] dark:text-warning-600'
+          }
+        >
+          {c.type}
+        </Badge>
+      ),
+    },
     { header: 'Phone', accessor: 'phone' as keyof Contact },
-    { header: 'Email', accessor: 'email' as keyof Contact },
+    {
+      header: 'Points',
+      accessor: (c: Contact) =>
+        c.loyaltyPoints != null && c.loyaltyPoints > 0 ? (
+          <span className="text-primary font-medium">
+            {c.loyaltyPoints} pts
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
   ];
 
   return (
@@ -104,24 +142,25 @@ export default function ContactsPage() {
         title={formData.id ? 'Edit Contact' : 'New Contact'}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="space-y-1.5">
             <Label>Type</Label>
-            <select
-              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              value={formData.type}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  type: e.target.value as Contact['type'],
-                })
+            <Select
+              value={formData.type || 'Customer'}
+              onValueChange={(val) =>
+                setFormData({ ...formData, type: val as Contact['type'] })
               }
             >
-              <option value="Customer">Customer</option>
-              <option value="Supplier">Supplier</option>
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Customer">Customer</SelectItem>
+                <SelectItem value="Supplier">Supplier</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div>
-            <Label>Name</Label>
+          <div className="space-y-1.5">
+            <Label>Name *</Label>
             <Input
               required
               value={formData.name || ''}
@@ -130,26 +169,61 @@ export default function ContactsPage() {
               }
             />
           </div>
-          <div>
-            <Label>Phone</Label>
-            <Input
-              value={formData.phone || ''}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Phone</Label>
+              <Input
+                value={formData.phone || ''}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={formData.email || ''}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Address</Label>
+            <Textarea
+              className="resize-none"
+              rows={2}
+              value={formData.address || ''}
               onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
+                setFormData({ ...formData, address: e.target.value })
               }
+              placeholder="Full address..."
             />
           </div>
-          <div>
-            <Label>Email</Label>
+          <div className="space-y-1.5">
+            <Label>Tax ID (NPWP)</Label>
             <Input
-              type="email"
-              value={formData.email || ''}
+              value={formData.taxId || ''}
               onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
+                setFormData({ ...formData, taxId: e.target.value })
               }
+              placeholder="e.g. 01.234.567.8-901.000"
             />
           </div>
-          <div className="flex gap-3 justify-end pt-4">
+          {formData.id && (formData.loyaltyPoints ?? 0) > 0 && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-primary">
+                Loyalty Points
+              </span>
+              <span className="text-sm font-bold text-primary">
+                {formData.loyaltyPoints} pts = Rp{' '}
+                {((formData.loyaltyPoints ?? 0) * 1000).toLocaleString()}
+              </span>
+            </div>
+          )}
+          <div className="flex gap-3 justify-end pt-2 border-t border-border">
             <Button
               type="button"
               variant="outline"

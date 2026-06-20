@@ -30,7 +30,11 @@ export default function SessionsPage() {
       header: 'Status',
       accessor: (s: PosSession) => (
         <span
-          className={`px-2 py-1 rounded-full text-xs font-bold ${s.status === 'Open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
+          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+            s.status === 'Open'
+              ? 'bg-success-50 text-success-600 dark:bg-success-500/[0.12] dark:text-success-400'
+              : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+          }`}
         >
           {s.status}
         </span>

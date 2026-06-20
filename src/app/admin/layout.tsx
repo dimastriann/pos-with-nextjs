@@ -1,9 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { Menu } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { AdminSidebar, SidebarContent } from '@/components/admin/AdminSidebar';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 export default function AdminLayout({
@@ -11,39 +10,43 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [isExpanded, setIsExpanded] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Desktop sidebar */}
-      <AdminSidebar />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Fixed desktop sidebar */}
+      <AdminSidebar
+        isExpanded={isExpanded}
+        onToggle={() => setIsExpanded((v) => !v)}
+      />
 
-      {/* Mobile Sheet drawer */}
+      {/* Mobile sheet drawer */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent
           side="left"
-          className="w-64 p-0 bg-sidebar border-sidebar-border"
+          className="w-[290px] p-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800"
         >
-          <SidebarContent onNavigate={() => setMobileOpen(false)} />
+          <SidebarContent
+            isExpanded={true}
+            onNavigate={() => setMobileOpen(false)}
+          />
         </SheetContent>
       </Sheet>
 
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Mobile top bar */}
-        <header className="md:hidden flex items-center justify-between px-4 py-2.5 border-b border-border bg-background flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <span className="font-bold text-foreground">POS Flow</span>
-          <ThemeToggle />
-        </header>
-
-        <main className="flex-1 overflow-auto p-4 md:p-8 lg:p-12">
-          <div className="max-w-6xl mx-auto">{children}</div>
+      {/* Main content — offset by sidebar width */}
+      <div
+        className={cn(
+          'transition-all duration-300 ease-in-out',
+          isExpanded ? 'md:ml-[290px]' : 'md:ml-[90px]',
+        )}
+      >
+        <AdminHeader
+          onMobileMenuOpen={() => setMobileOpen(true)}
+          onSidebarToggle={() => setIsExpanded((v) => !v)}
+        />
+        <main className="p-4 md:p-6 lg:p-8">
+          <div className="max-w-screen-xl mx-auto">{children}</div>
         </main>
       </div>
     </div>

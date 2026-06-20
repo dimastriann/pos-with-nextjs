@@ -37,6 +37,8 @@ export async function processPayment(
       customerName: state.customer?.name,
       date: now,
       totalAmount: total,
+      orderDiscount: state.orderDiscount > 0 ? state.orderDiscount : undefined,
+      notes: state.orderNotes || undefined,
       status: 'Paid',
     };
 
@@ -82,8 +84,11 @@ export async function processPayment(
       await contactRepository.earnPoints(state.customer.id, total);
 
       // Refresh customer in state so the next transaction sees updated points
-      const updatedCustomer = await contactRepository.getById(state.customer.id);
-      if (updatedCustomer) dispatch({ type: 'SET_CUSTOMER', customer: updatedCustomer });
+      const updatedCustomer = await contactRepository.getById(
+        state.customer.id,
+      );
+      if (updatedCustomer)
+        dispatch({ type: 'SET_CUSTOMER', customer: updatedCustomer });
     }
 
     const cashPaid = payments
