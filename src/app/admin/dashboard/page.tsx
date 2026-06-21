@@ -25,7 +25,9 @@ import {
   Users,
   TrendingUp,
   TrendingDown,
+  AlertTriangle,
 } from 'lucide-react';
+import Link from 'next/link';
 import { PosOrder } from '@/models/PosModels';
 
 interface DaySales {
@@ -76,6 +78,7 @@ export default function AdminDashboard() {
   const [dailySales, setDailySales] = useState<DaySales[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [recentOrders, setRecentOrders] = useState<PosOrder[]>([]);
+  const [lowStockProducts, setLowStockProducts] = useState<{ name: string; stock: number; minStock: number }[]>([]);
 
   const [statCards, setStatCards] = useState([
     {
@@ -209,6 +212,13 @@ export default function AdminDashboard() {
           )
           .slice(0, 8),
       );
+
+      const lowStock = products
+        .filter((p) => p.active !== false && p.minStock !== undefined && p.stock <= p.minStock)
+        .sort((a, b) => a.stock / (a.minStock ?? 1) - b.stock / (b.minStock ?? 1))
+        .slice(0, 5)
+        .map((p) => ({ name: p.name, stock: p.stock, minStock: p.minStock! }));
+      setLowStockProducts(lowStock);
 
       setIsLoaded(true);
     };
@@ -385,6 +395,44 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Low Stock Alert */}
+      {lowStockProducts.length > 0 && (
+        <div className="mb-6">
+          <Card className="border-warning-200 dark:border-warning-500/30">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-lg p-1.5 bg-warning-50 dark:bg-warning-500/[0.12]">
+                    <AlertTriangle className="h-4 w-4 text-warning-600 dark:text-warning-500" />
+                  </div>
+                  <CardTitle className="text-sm font-semibold text-gray-800 dark:text-white/90">
+                    Low Stock Alert — {lowStockProducts.length} product{lowStockProducts.length !== 1 ? 's' : ''}
+                  </CardTitle>
+                </div>
+                <Link href="/admin/low-stock" className="text-xs text-brand-500 hover:text-brand-600 font-medium">
+                  View all →
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                {lowStockProducts.map((p) => (
+                  <div key={p.name} className="flex items-center justify-between px-5 py-3">
+                    <span className="text-sm font-medium text-gray-800 dark:text-white/90">{p.name}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-400">min: {p.minStock}</span>
+                      <span className={`text-sm font-bold ${p.stock === 0 ? 'text-error-600 dark:text-error-400' : 'text-warning-600 dark:text-warning-500'}`}>
+                        {p.stock} left
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Bottom row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

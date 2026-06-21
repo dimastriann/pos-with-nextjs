@@ -12,4 +12,7 @@ export const RESOURCE_KEYS = {
   ORDERS: 'pos_data_orders',
   ORDER_LINES: 'pos_data_order_lines',
   PAYMENTS: 'pos_data_payments',
+  STOCK_ADJUSTMENTS: 'pos_data_stock_adjustments',
+  PURCHASE_ORDERS: 'pos_data_purchase_orders',
+  PURCHASE_ORDER_LINES: 'pos_data_purchase_order_lines',
 } as const;
