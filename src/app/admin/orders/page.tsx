@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { PosOrder, PosOrderLine, PosPayment } from '@/models/PosModels';
 import { orderRepository } from '@/repositories/orderRepository';
+import { productRepository } from '@/repositories/productRepository';
 import { DataTable } from '@/components/admin/DataTable';
 import { Modal } from '@/components/admin/Modal';
 import { PageHeader } from '@/components/admin/PageHeader';
@@ -32,6 +33,13 @@ export default function OrdersPage() {
   const [orderLines, setOrderLines] = useState<PosOrderLine[]>([]);
   const [orderPayments, setOrderPayments] = useState<PosPayment[]>([]);
 
+  // Refund state
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [refundOrder, setRefundOrder] = useState<PosOrder | null>(null);
+  const [refundLines, setRefundLines] = useState<PosOrderLine[]>([]);
+  const [refundQtys, setRefundQtys] = useState<Record<string, number>>({});
+  const [isRefunding, setIsRefunding] = useState(false);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -47,6 +55,35 @@ export default function OrdersPage() {
     setOrderLines(lines);
     setOrderPayments(payments);
     setIsModalOpen(true);
+  };
+
+  const handleOpenRefund = async (order: PosOrder) => {
+    const lines = await orderRepository.getLinesByOrderId(order.id);
+    setRefundOrder(order);
+    setRefundLines(lines);
+    const defaultQtys: Record<string, number> = {};
+    lines.forEach((l) => { defaultQtys[l.id] = l.qty; });
+    setRefundQtys(defaultQtys);
+    setIsRefundModalOpen(true);
+  };
+
+  const handleConfirmRefund = async () => {
+    if (!refundOrder) return;
+    setIsRefunding(true);
+    try {
+      for (const line of refundLines) {
+        const qty = refundQtys[line.id] ?? 0;
+        if (qty > 0) {
+          await productRepository.incrementStock(line.productId, qty);
+        }
+      }
+      await orderRepository.updateStatus(refundOrder.id, 'Refunded');
+      await loadData();
+      setIsRefundModalOpen(false);
+      setRefundOrder(null);
+    } finally {
+      setIsRefunding(false);
+    }
   };
 
   const columns = [
@@ -109,17 +146,30 @@ export default function OrdersPage() {
         data={orders}
         columns={columns}
         actions={(item) => (
-          <Button
-            variant="link"
-            size="sm"
-            className="text-primary"
-            onClick={() => handleView(item)}
-          >
-            View Details
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="link"
+              size="sm"
+              className="text-primary"
+              onClick={() => handleView(item)}
+            >
+              View
+            </Button>
+            {item.status === 'Paid' && (
+              <Button
+                variant="link"
+                size="sm"
+                className="text-error-500 dark:text-error-400"
+                onClick={() => handleOpenRefund(item)}
+              >
+                Refund
+              </Button>
+            )}
+          </div>
         )}
       />
 
+      {/* View Details Modal */}
       {selectedOrder && (
         <Modal
           isOpen={isModalOpen}
@@ -276,6 +326,91 @@ export default function OrdersPage() {
                 onClick={() => setIsModalOpen(false)}
               >
                 Close
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Refund Modal */}
+      {refundOrder && (
+        <Modal
+          isOpen={isRefundModalOpen}
+          onClose={() => setIsRefundModalOpen(false)}
+          title={`Refund Order #${refundOrder.id.slice(0, 8).toUpperCase()}`}
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Select quantities to return. Stock will be restored automatically.
+            </p>
+
+            <div className="rounded-xl border border-border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40">
+                  <tr className="border-b border-border">
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                      Product
+                    </th>
+                    <th className="px-3 py-2 text-right font-medium text-muted-foreground">
+                      Sold
+                    </th>
+                    <th className="px-3 py-2 text-right font-medium text-muted-foreground">
+                      Return Qty
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {refundLines.map((line) => (
+                    <tr key={line.id}>
+                      <td className="px-3 py-2 text-foreground">
+                        {line.productName}
+                      </td>
+                      <td className="px-3 py-2 text-right text-muted-foreground">
+                        {line.qty}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <input
+                          type="number"
+                          min={0}
+                          max={line.qty}
+                          value={refundQtys[line.id] ?? line.qty}
+                          onChange={(e) =>
+                            setRefundQtys((prev) => ({
+                              ...prev,
+                              [line.id]: Math.min(
+                                line.qty,
+                                Math.max(0, parseInt(e.target.value) || 0),
+                              ),
+                            }))
+                          }
+                          className="w-16 text-right border border-border rounded px-2 py-1 text-sm bg-background text-foreground [appearance:textfield]"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl p-3 text-sm text-error-700 dark:text-error-400">
+              This action will mark the order as <strong>Refunded</strong> and
+              restore stock for returned items. This cannot be undone.
+            </div>
+
+            <div className="flex justify-end gap-2 pt-1 border-t border-border">
+              <Button
+                variant="outline"
+                onClick={() => setIsRefundModalOpen(false)}
+                disabled={isRefunding}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmRefund}
+                disabled={isRefunding}
+              >
+                {isRefunding ? 'Processing…' : 'Confirm Refund'}
               </Button>
             </div>
           </div>

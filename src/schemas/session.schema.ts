@@ -9,6 +9,8 @@ export const SessionSchema = z.object({
   status: z.enum(['Open', 'Closed']),
   totalOrders: z.number().int().min(0),
   totalCash: z.number().min(0),
+  openingFloat: z.number().min(0).optional(),
+  closingFloat: z.number().min(0).optional(),
 });
 
 export type SessionInput = z.infer<typeof SessionSchema>;

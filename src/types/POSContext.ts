@@ -6,6 +6,15 @@ import { Product } from '@/models/Product';
 export type NumpadMode = 'qty' | 'disc' | 'price';
 export type POSScreen = 'pos_order' | 'payment' | 'receipt';
 
+export interface HeldOrder {
+  id: string;
+  label: string;
+  cartLines: CartLine[];
+  customer: Contact | null;
+  orderDiscount: number;
+  orderNotes: string;
+}
+
 export interface POSState {
   activeSession: PosSession | null;
   activeShop: PosShop | null;
@@ -22,6 +31,7 @@ export interface POSState {
   isLoading: boolean;
   error: string | null;
   lastCompletedOrder: PosOrder | null;
+  heldOrders: HeldOrder[];
 }
 
 export type POSAction =
@@ -44,4 +54,7 @@ export type POSAction =
   | { type: 'SESSION_END' }
   | { type: 'SET_PAYMENT_METHODS'; methods: PaymentMethod[] }
   | { type: 'SET_LOADING'; loading: boolean }
-  | { type: 'SET_ERROR'; error: string | null };
+  | { type: 'SET_ERROR'; error: string | null }
+  | { type: 'HOLD_ORDER' }
+  | { type: 'RECALL_ORDER'; id: string }
+  | { type: 'DISCARD_HELD'; id: string };

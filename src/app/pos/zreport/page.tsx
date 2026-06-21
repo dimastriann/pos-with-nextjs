@@ -3,7 +3,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { sessionRepository } from '@/repositories/sessionRepository';
 import { orderRepository } from '@/repositories/orderRepository';
-import { PosSession, PosOrder, PosPayment } from '@/models/PosModels';
+import { PosSession, PosOrder } from '@/models/PosModels';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -24,6 +24,8 @@ function ZReportContent() {
   const [orders, setOrders] = useState<PosOrder[]>([]);
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [closingFloatInput, setClosingFloatInput] = useState('');
+  const [isSavingFloat, setIsSavingFloat] = useState(false);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -67,6 +69,21 @@ function ZReportContent() {
     load();
   }, [sessionId]);
 
+  const handleSaveClosingFloat = async () => {
+    if (!session) return;
+    const amount = Math.max(0, parseFloat(closingFloatInput) || 0);
+    setIsSavingFloat(true);
+    try {
+      const updated = await sessionRepository.update({
+        ...session,
+        closingFloat: amount,
+      });
+      setSession(updated);
+    } finally {
+      setIsSavingFloat(false);
+    }
+  };
+
   const grandTotal = orders.reduce((s, o) => s + o.totalAmount, 0);
   const duration =
     session?.endAt && session?.startAt
@@ -76,6 +93,14 @@ function ZReportContent() {
             60000,
         )
       : null;
+
+  const expectedCash =
+    (session?.openingFloat ?? 0) + (session?.totalCash ?? 0);
+  const hasFloat =
+    session?.closingFloat !== undefined && session?.closingFloat !== null;
+  const discrepancy = hasFloat
+    ? (session!.closingFloat ?? 0) - expectedCash
+    : null;
 
   if (isLoading) {
     return (
@@ -104,6 +129,89 @@ function ZReportContent() {
             {session.endAt ? new Date(session.endAt).toLocaleString() : '—'}
           </p>
         </div>
+
+        {/* Cash Reconciliation */}
+        <Card className={hasFloat && discrepancy !== null && discrepancy !== 0
+          ? 'border-warning-300 dark:border-warning-500/30'
+          : ''}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Cash Reconciliation</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-muted/40 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground mb-0.5">Opening Float</p>
+                <p className="font-semibold">
+                  Rp {(session.openingFloat ?? 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="bg-muted/40 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground mb-0.5">Cash Sales</p>
+                <p className="font-semibold">
+                  Rp {(session.totalCash ?? 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center font-semibold border-t border-border pt-2">
+              <span className="text-muted-foreground">Expected in Drawer</span>
+              <span>Rp {expectedCash.toLocaleString()}</span>
+            </div>
+
+            {hasFloat ? (
+              <>
+                <div className="flex justify-between items-center font-semibold">
+                  <span className="text-muted-foreground">Actual Count</span>
+                  <span>Rp {(session.closingFloat ?? 0).toLocaleString()}</span>
+                </div>
+                <div
+                  className={`flex justify-between items-center font-bold rounded-lg px-3 py-2 ${
+                    discrepancy === 0
+                      ? 'bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400'
+                      : 'bg-warning-50 text-warning-700 dark:bg-warning-500/10 dark:text-warning-500'
+                  }`}
+                >
+                  <span>Discrepancy</span>
+                  <span>
+                    {discrepancy === 0
+                      ? '✓ Balanced'
+                      : `${discrepancy! > 0 ? '+' : ''}Rp ${discrepancy!.toLocaleString()}`}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2 print:hidden">
+                <p className="text-xs text-muted-foreground">
+                  Count the cash in the drawer and enter the total.
+                </p>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                      Rp
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1000}
+                      value={closingFloatInput}
+                      onChange={(e) => setClosingFloatInput(e.target.value)}
+                      placeholder="0"
+                      className="w-full pl-10 pr-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground [appearance:textfield] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveClosingFloat}
+                    disabled={isSavingFloat}
+                    className="shrink-0"
+                  >
+                    {isSavingFloat ? 'Saving…' : 'Confirm Count'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Session info */}
         <Card>

@@ -35,4 +35,11 @@ export const productRepository = {
     const updated = { ...product, stock: Math.max(0, product.stock - qty) };
     await adapter.update(RESOURCE_KEYS.PRODUCTS, updated);
   },
+
+  incrementStock: async (id: string, qty: number): Promise<void> => {
+    const product = await adapter.getById<Product>(RESOURCE_KEYS.PRODUCTS, id);
+    if (!product) return;
+    const updated = { ...product, stock: product.stock + qty };
+    await adapter.update(RESOURCE_KEYS.PRODUCTS, updated);
+  },
 };

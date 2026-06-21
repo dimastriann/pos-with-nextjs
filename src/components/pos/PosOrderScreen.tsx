@@ -1,21 +1,21 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ShoppingCart, ScanBarcode } from 'lucide-react';
+import { ShoppingCart, ScanBarcode, X, PauseCircle, UserPlus } from 'lucide-react';
 import Numpad from '@/components/pos/Numpad';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { X } from 'lucide-react';
 import { usePOS } from '@/lib/context/POSContextStore';
 import { productRepository } from '@/repositories/productRepository';
 import { categoryRepository } from '@/repositories/categoryRepository';
+import { contactRepository } from '@/repositories/contactRepository';
 import { useBarcodeScanner } from '@/lib/hooks/useBarcodeScanner';
 import { Product } from '@/models/Product';
 import { Category, Contact } from '@/models/MasterData';
 import { computeOrderTotal } from '@/lib/utils/cartCalculations';
-import { contactRepository } from '@/repositories/contactRepository';
+import { HeldOrder } from '@/types/POSContext';
 
 export function PosOrderScreen() {
   const { state, dispatch } = usePOS();
@@ -32,6 +32,11 @@ export function PosOrderScreen() {
   const [customers, setCustomers] = useState<Contact[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
+  const [showHeldOrders, setShowHeldOrders] = useState(false);
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState('');
+  const [newCustomerPhone, setNewCustomerPhone] = useState('');
+  const [isSavingCustomer, setIsSavingCustomer] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -61,6 +66,27 @@ export function PosOrderScreen() {
   );
 
   useBarcodeScanner(handleScan);
+
+  const handleCreateCustomer = async () => {
+    if (!newCustomerName.trim()) return;
+    setIsSavingCustomer(true);
+    try {
+      const contact = await contactRepository.create({
+        name: newCustomerName.trim(),
+        type: 'Customer',
+        phone: newCustomerPhone.trim() || undefined,
+        loyaltyPoints: 0,
+      });
+      setCustomers((prev) => [...prev, contact]);
+      dispatch({ type: 'SET_CUSTOMER', customer: contact });
+      setShowCustomerSearch(false);
+      setShowNewCustomer(false);
+      setNewCustomerName('');
+      setNewCustomerPhone('');
+    } finally {
+      setIsSavingCustomer(false);
+    }
+  };
 
   const filteredProducts = products.filter((p) => {
     if (p.active === false) return false;
@@ -224,57 +250,139 @@ export function PosOrderScreen() {
 
   const cartPanel = (
     <div className="flex flex-col overflow-hidden h-full">
+      {/* Hold / Recall row */}
+      <div className="flex gap-1.5 mb-2 flex-shrink-0">
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs flex-1 gap-1"
+          disabled={state.cartLines.length === 0}
+          onClick={() => dispatch({ type: 'HOLD_ORDER' })}
+        >
+          <PauseCircle className="h-3.5 w-3.5" />
+          Hold
+        </Button>
+        {state.heldOrders.length > 0 && (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="text-xs gap-1"
+            onClick={() => setShowHeldOrders(true)}
+          >
+            Held
+            <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-warning-500 text-white text-xs font-bold">
+              {state.heldOrders.length}
+            </span>
+          </Button>
+        )}
+      </div>
+
       {/* Customer selector */}
       <div className="mb-2 flex-shrink-0">
         {showCustomerSearch ? (
           <div className="border border-border rounded-lg p-2 bg-card space-y-1.5">
-            <Input
-              autoFocus
-              placeholder="Search customer…"
-              value={customerSearch}
-              onChange={(e) => setCustomerSearch(e.target.value)}
-              className="h-7 text-sm"
-            />
-            <div className="max-h-32 overflow-y-auto space-y-0.5">
-              {customers
-                .filter((c) =>
-                  c.name.toLowerCase().includes(customerSearch.toLowerCase()),
-                )
-                .slice(0, 8)
-                .map((c) => (
-                  <button
-                    key={c.id}
-                    className="w-full text-left px-2 py-1 text-sm rounded hover:bg-accent transition-colors flex justify-between items-center"
+            {showNewCustomer ? (
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-foreground flex items-center gap-1">
+                  <UserPlus className="h-3.5 w-3.5" /> New Customer
+                </p>
+                <Input
+                  autoFocus
+                  placeholder="Name *"
+                  value={newCustomerName}
+                  onChange={(e) => setNewCustomerName(e.target.value)}
+                  className="h-7 text-sm"
+                />
+                <Input
+                  placeholder="Phone (optional)"
+                  value={newCustomerPhone}
+                  onChange={(e) => setNewCustomerPhone(e.target.value)}
+                  className="h-7 text-sm"
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateCustomer()}
+                />
+                <div className="flex gap-1.5">
+                  <Button
+                    size="sm"
+                    className="flex-1 h-6 text-xs"
+                    disabled={!newCustomerName.trim() || isSavingCustomer}
+                    onClick={handleCreateCustomer}
+                  >
+                    {isSavingCustomer ? 'Saving…' : 'Save & Select'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 text-xs"
+                    onClick={() => setShowNewCustomer(false)}
+                  >
+                    Back
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <Input
+                  autoFocus
+                  placeholder="Search customer…"
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                  className="h-7 text-sm"
+                />
+                <div className="max-h-32 overflow-y-auto space-y-0.5">
+                  {customers
+                    .filter((c) =>
+                      c.name.toLowerCase().includes(customerSearch.toLowerCase()),
+                    )
+                    .slice(0, 8)
+                    .map((c) => (
+                      <button
+                        key={c.id}
+                        className="w-full text-left px-2 py-1 text-sm rounded hover:bg-accent transition-colors flex justify-between items-center"
+                        onClick={() => {
+                          dispatch({ type: 'SET_CUSTOMER', customer: c });
+                          setShowCustomerSearch(false);
+                          setCustomerSearch('');
+                        }}
+                      >
+                        <span>{c.name}</span>
+                        {(c.loyaltyPoints ?? 0) > 0 && (
+                          <span className="text-xs text-primary font-medium">
+                            {c.loyaltyPoints} pts
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  {customers.filter((c) =>
+                    c.name.toLowerCase().includes(customerSearch.toLowerCase()),
+                  ).length === 0 && (
+                    <p className="text-xs text-muted-foreground px-2 py-1">
+                      No customers found
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 h-6 text-xs gap-1"
                     onClick={() => {
-                      dispatch({ type: 'SET_CUSTOMER', customer: c });
-                      setShowCustomerSearch(false);
-                      setCustomerSearch('');
+                      setShowNewCustomer(true);
+                      setNewCustomerName(customerSearch);
                     }}
                   >
-                    <span>{c.name}</span>
-                    {(c.loyaltyPoints ?? 0) > 0 && (
-                      <span className="text-xs text-primary font-medium">
-                        {c.loyaltyPoints} pts
-                      </span>
-                    )}
-                  </button>
-                ))}
-              {customers.filter((c) =>
-                c.name.toLowerCase().includes(customerSearch.toLowerCase()),
-              ).length === 0 && (
-                <p className="text-xs text-muted-foreground px-2 py-1">
-                  No customers found
-                </p>
-              )}
-            </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="w-full h-6 text-xs"
-              onClick={() => setShowCustomerSearch(false)}
-            >
-              Cancel
-            </Button>
+                    <UserPlus className="h-3 w-3" /> New Customer
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 text-xs"
+                    onClick={() => setShowCustomerSearch(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className="flex items-center gap-1.5">
@@ -526,6 +634,92 @@ export function PosOrderScreen() {
           </div>
         )}
       </div>
+
+      {/* ── Held Orders Modal ── */}
+      {showHeldOrders && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowHeldOrders(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
+              <h2 className="text-lg font-bold text-foreground">Held Orders</h2>
+              <button
+                onClick={() => setShowHeldOrders(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
+              {state.heldOrders.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-4">
+                  No held orders
+                </p>
+              ) : (
+                state.heldOrders.map((held: HeldOrder) => (
+                  <div
+                    key={held.id}
+                    className="border border-border rounded-xl p-3 flex items-start justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-foreground">
+                        {held.label}
+                      </p>
+                      {held.customer && (
+                        <p className="text-xs text-muted-foreground">
+                          {held.customer.name}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {held.cartLines.length} item(s) · Rp{' '}
+                        {computeOrderTotal(
+                          held.cartLines,
+                          held.orderDiscount,
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <Button
+                        size="sm"
+                        className="text-xs h-7 px-3"
+                        onClick={() => {
+                          dispatch({ type: 'RECALL_ORDER', id: held.id });
+                          setShowHeldOrders(false);
+                        }}
+                      >
+                        Recall
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() =>
+                          dispatch({ type: 'DISCARD_HELD', id: held.id })
+                        }
+                      >
+                        Discard
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="px-5 pb-5">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowHeldOrders(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

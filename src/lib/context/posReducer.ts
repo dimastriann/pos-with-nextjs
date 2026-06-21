@@ -1,10 +1,11 @@
-import { POSState, POSAction, NumpadMode } from '@/types/POSContext';
+import { POSState, POSAction, NumpadMode, HeldOrder } from '@/types/POSContext';
 import { CartLine } from '@/models/CartModels';
 import {
   computeSubtotal,
   computeCartTotal,
 } from '@/lib/utils/cartCalculations';
 import { Product } from '@/models/Product';
+import { generateId } from '@/lib/utils/generateId';
 
 export const initialPOSState: POSState = {
   activeSession: null,
@@ -22,6 +23,7 @@ export const initialPOSState: POSState = {
   isLoading: false,
   error: null,
   lastCompletedOrder: null,
+  heldOrders: [],
 };
 
 function applyNumpadInput(
@@ -236,6 +238,49 @@ export function posReducer(state: POSState, action: POSAction): POSState {
 
     case 'SET_ERROR':
       return { ...state, error: action.error };
+
+    case 'HOLD_ORDER': {
+      if (state.cartLines.length === 0) return state;
+      const held: HeldOrder = {
+        id: generateId(),
+        label: `Order ${state.heldOrders.length + 1}`,
+        cartLines: state.cartLines,
+        customer: state.customer,
+        orderDiscount: state.orderDiscount,
+        orderNotes: state.orderNotes,
+      };
+      return {
+        ...state,
+        heldOrders: [...state.heldOrders, held],
+        cartLines: [],
+        selectedLineIndex: null,
+        customer: null,
+        orderDiscount: 0,
+        orderNotes: '',
+        numpadInput: '',
+      };
+    }
+
+    case 'RECALL_ORDER': {
+      const held = state.heldOrders.find((h) => h.id === action.id);
+      if (!held) return state;
+      return {
+        ...state,
+        heldOrders: state.heldOrders.filter((h) => h.id !== action.id),
+        cartLines: held.cartLines,
+        selectedLineIndex: null,
+        customer: held.customer,
+        orderDiscount: held.orderDiscount,
+        orderNotes: held.orderNotes,
+        numpadInput: '',
+      };
+    }
+
+    case 'DISCARD_HELD':
+      return {
+        ...state,
+        heldOrders: state.heldOrders.filter((h) => h.id !== action.id),
+      };
 
     default:
       return state;

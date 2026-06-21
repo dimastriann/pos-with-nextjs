@@ -19,6 +19,7 @@ export default function SessionGatePage() {
   const [openSession, setOpenSession] = useState<PosSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isOpening, setIsOpening] = useState(false);
+  const [openingFloat, setOpeningFloat] = useState('0');
 
   useEffect(() => {
     const load = async () => {
@@ -46,6 +47,7 @@ export default function SessionGatePage() {
     if (!user || !shop) return;
     setIsOpening(true);
     try {
+      const float = Math.max(0, parseFloat(openingFloat) || 0);
       const session = await sessionRepository.create({
         shopId: shop.id,
         userId: user.id,
@@ -53,6 +55,7 @@ export default function SessionGatePage() {
         status: 'Open',
         totalOrders: 0,
         totalCash: 0,
+        openingFloat: float,
       });
       dispatch({ type: 'SESSION_START', session, shop });
       router.push('/pos');
@@ -119,6 +122,12 @@ export default function SessionGatePage() {
                 <p className="text-green-600 dark:text-green-500 text-xs">
                   Orders: {openSession.totalOrders}
                 </p>
+                {(openSession.openingFloat ?? 0) > 0 && (
+                  <p className="text-green-600 dark:text-green-500 text-xs">
+                    Opening float: Rp{' '}
+                    {(openSession.openingFloat ?? 0).toLocaleString()}
+                  </p>
+                )}
               </div>
               <Button
                 onClick={handleResumeSession}
@@ -136,10 +145,34 @@ export default function SessionGatePage() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <p className="text-center text-muted-foreground text-sm">
                 No open session. Start a new one to begin selling.
               </p>
+
+              {/* Opening Cash Float */}
+              <div className="bg-muted/40 rounded-xl p-4 space-y-2">
+                <label className="block text-sm font-medium text-foreground">
+                  Opening Cash Float
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Enter the amount of cash currently in the drawer.
+                </p>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                    Rp
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={openingFloat}
+                    onChange={(e) => setOpeningFloat(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2.5 border border-border rounded-lg text-sm bg-background text-foreground [appearance:textfield] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+              </div>
+
               <Button
                 onClick={handleOpenSession}
                 disabled={isOpening}

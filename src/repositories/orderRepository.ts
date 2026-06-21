@@ -19,6 +19,12 @@ export const orderRepository = {
     return adapter.update(RESOURCE_KEYS.ORDERS, order);
   },
 
+  updateStatus: async (id: string, status: PosOrder['status']): Promise<void> => {
+    const order = await adapter.getById<PosOrder>(RESOURCE_KEYS.ORDERS, id);
+    if (!order) return;
+    await adapter.update(RESOURCE_KEYS.ORDERS, { ...order, status });
+  },
+
   delete: (id: string): Promise<void> =>
     adapter.delete(RESOURCE_KEYS.ORDERS, id),
 

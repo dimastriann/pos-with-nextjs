@@ -19,6 +19,8 @@ export interface PosSession {
   status: 'Open' | 'Closed';
   totalOrders: number;
   totalCash: number;
+  openingFloat?: number; // starting cash declared when opening session
+  closingFloat?: number; // actual cash counted when closing session
 }
 
 export interface PosOrderLine {
