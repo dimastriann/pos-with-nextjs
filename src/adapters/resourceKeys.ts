@@ -15,4 +15,7 @@ export const RESOURCE_KEYS = {
   STOCK_ADJUSTMENTS: 'pos_data_stock_adjustments',
   PURCHASE_ORDERS: 'pos_data_purchase_orders',
   PURCHASE_ORDER_LINES: 'pos_data_purchase_order_lines',
+  PROMOTIONS: 'pos_promotions',
+  PRICE_GROUPS: 'pos_price_groups',
+  PRICE_GROUP_ITEMS: 'pos_price_group_items',
 } as const;

@@ -21,6 +21,8 @@ import {
   ArrowUpDown,
   ClipboardList,
   AlertTriangle,
+  Percent,
+  Layers,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
@@ -87,6 +89,15 @@ const MENU_ITEMS: MenuItem[] = [
     ],
   },
   {
+    label: 'Promotions',
+    icon: Percent,
+    group: 'Main Menu',
+    subItems: [
+      { label: 'Promotions', href: '/admin/promotions', icon: Percent },
+      { label: 'Price Groups', href: '/admin/price-groups', icon: Layers },
+    ],
+  },
+  {
     label: 'Configuration',
     icon: Users,
     group: 'Others',
@@ -132,6 +143,7 @@ export function SidebarContent({
     'POS Management': true,
     'Sales & Orders': true,
     Inventory: true,
+    Promotions: false,
     Configuration: false,
   });
   const [currentUser, setCurrentUser] = useState<User | null>(null);

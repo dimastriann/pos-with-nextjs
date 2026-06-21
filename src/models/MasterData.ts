@@ -19,6 +19,7 @@ export interface Contact {
   address?: string;
   taxId?: string;
   loyaltyPoints?: number; // 1 point earned per 10,000 IDR spent; 1 point = 1,000 IDR redemption
+  priceGroupId?: string;
 }
 
 export interface PaymentMethod {

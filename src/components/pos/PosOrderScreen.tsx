@@ -11,6 +11,7 @@ import { usePOS } from '@/lib/context/POSContextStore';
 import { productRepository } from '@/repositories/productRepository';
 import { categoryRepository } from '@/repositories/categoryRepository';
 import { contactRepository } from '@/repositories/contactRepository';
+import { priceGroupRepository } from '@/repositories/priceGroupRepository';
 import { useBarcodeScanner } from '@/lib/hooks/useBarcodeScanner';
 import { Product } from '@/models/Product';
 import { Category, Contact } from '@/models/MasterData';
@@ -67,6 +68,15 @@ export function PosOrderScreen() {
 
   useBarcodeScanner(handleScan);
 
+  const selectCustomer = async (contact: Contact | null) => {
+    if (!contact?.priceGroupId) {
+      dispatch({ type: 'SET_CUSTOMER', customer: contact, priceGroupItems: [] });
+      return;
+    }
+    const items = await priceGroupRepository.getItemsByGroupId(contact.priceGroupId);
+    dispatch({ type: 'SET_CUSTOMER', customer: contact, priceGroupItems: items });
+  };
+
   const handleCreateCustomer = async () => {
     if (!newCustomerName.trim()) return;
     setIsSavingCustomer(true);
@@ -78,7 +88,7 @@ export function PosOrderScreen() {
         loyaltyPoints: 0,
       });
       setCustomers((prev) => [...prev, contact]);
-      dispatch({ type: 'SET_CUSTOMER', customer: contact });
+      await selectCustomer(contact);
       setShowCustomerSearch(false);
       setShowNewCustomer(false);
       setNewCustomerName('');
@@ -339,7 +349,7 @@ export function PosOrderScreen() {
                         key={c.id}
                         className="w-full text-left px-2 py-1 text-sm rounded hover:bg-accent transition-colors flex justify-between items-center"
                         onClick={() => {
-                          dispatch({ type: 'SET_CUSTOMER', customer: c });
+                          selectCustomer(c);
                           setShowCustomerSearch(false);
                           setCustomerSearch('');
                         }}
@@ -406,9 +416,7 @@ export function PosOrderScreen() {
             {state.customer && (
               <button
                 className="text-muted-foreground hover:text-destructive transition-colors"
-                onClick={() =>
-                  dispatch({ type: 'SET_CUSTOMER', customer: null })
-                }
+                onClick={() => selectCustomer(null)}
               >
                 <X className="h-4 w-4" />
               </button>

@@ -1,7 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Contact } from '@/models/MasterData';
+import { PriceGroup } from '@/models/PromoModels';
 import { contactRepository } from '@/repositories/contactRepository';
+import { priceGroupRepository } from '@/repositories/priceGroupRepository';
 import { DataTable } from '@/components/admin/DataTable';
 import { Modal } from '@/components/admin/Modal';
 import { PageHeader } from '@/components/admin/PageHeader';
@@ -20,6 +22,7 @@ import {
 
 export default function ContactsPage() {
   const [data, setData] = useState<Contact[]>([]);
+  const [priceGroups, setPriceGroups] = useState<PriceGroup[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<Contact>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +31,14 @@ export default function ContactsPage() {
     loadData();
   }, []);
 
-  const loadData = async () => setData(await contactRepository.getAll());
+  const loadData = async () => {
+    const [contacts, groups] = await Promise.all([
+      contactRepository.getAll(),
+      priceGroupRepository.getAll(),
+    ]);
+    setData(contacts);
+    setPriceGroups(groups);
+  };
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure?')) {
@@ -102,6 +112,19 @@ export default function ContactsPage() {
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
+    },
+    {
+      header: 'Price Group',
+      accessor: (c: Contact) => {
+        const pg = priceGroups.find((g) => g.id === c.priceGroupId);
+        return pg ? (
+          <span className="text-xs bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400 px-2 py-0.5 rounded-full font-medium">
+            {pg.name}
+          </span>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        );
+      },
     },
   ];
 
@@ -212,6 +235,30 @@ export default function ContactsPage() {
               placeholder="e.g. 01.234.567.8-901.000"
             />
           </div>
+          {formData.type === 'Customer' && priceGroups.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>Price Group (optional)</Label>
+              <Select
+                value={formData.priceGroupId ?? '__none__'}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, priceGroupId: v === '__none__' ? undefined : (v ?? undefined) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="No price group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No price group</SelectItem>
+                  {priceGroups.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-400">
+                Custom prices from this group will apply when this customer is selected in POS.
+              </p>
+            </div>
+          )}
           {formData.id && (formData.loyaltyPoints ?? 0) > 0 && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 flex items-center justify-between">
               <span className="text-sm font-medium text-primary">

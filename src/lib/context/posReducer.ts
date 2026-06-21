@@ -5,6 +5,7 @@ import {
   computeCartTotal,
 } from '@/lib/utils/cartCalculations';
 import { Product } from '@/models/Product';
+import { Promotion, PriceGroupItem } from '@/models/PromoModels';
 import { generateId } from '@/lib/utils/generateId';
 
 export const initialPOSState: POSState = {
@@ -24,6 +25,8 @@ export const initialPOSState: POSState = {
   error: null,
   lastCompletedOrder: null,
   heldOrders: [],
+  activePromotions: [],
+  activePriceGroupItems: [],
 };
 
 function applyNumpadInput(
@@ -45,9 +48,26 @@ function applyNumpadInput(
   return updated;
 }
 
+function resolvePromoDiscount(
+  product: Product,
+  promotions: Promotion[],
+): number {
+  let best = 0;
+  for (const p of promotions) {
+    if (p.type === 'product' && p.productId === product.id) {
+      best = Math.max(best, p.discountPct);
+    } else if (p.type === 'category' && p.categoryId === product.categoryId) {
+      best = Math.max(best, p.discountPct);
+    }
+  }
+  return best;
+}
+
 function addProduct(
   lines: CartLine[],
   product: Product,
+  promotions: Promotion[],
+  priceGroupItems: PriceGroupItem[],
 ): { lines: CartLine[]; selectedIndex: number } {
   const idx = lines.findIndex((l) => l.productId === product.id);
   if (idx !== -1) {
@@ -58,13 +78,18 @@ function addProduct(
     });
     return { lines: updated, selectedIndex: idx };
   }
+
+  const pgItem = priceGroupItems.find((i) => i.productId === product.id);
+  const price = pgItem ? pgItem.customPrice : product.price;
+  const discount = resolvePromoDiscount(product, promotions);
+
   const newLine: CartLine = {
     productId: product.id,
     productName: product.name,
-    price: product.price,
+    price,
     qty: 1,
-    discount: 0,
-    subtotal: product.price,
+    discount,
+    subtotal: computeSubtotal(price, 1, discount),
   };
   return { lines: [...lines, newLine], selectedIndex: lines.length };
 }
@@ -75,6 +100,8 @@ export function posReducer(state: POSState, action: POSAction): POSState {
       const { lines, selectedIndex } = addProduct(
         state.cartLines,
         action.product,
+        state.activePromotions,
+        state.activePriceGroupItems,
       );
       return {
         ...state,
@@ -94,8 +121,23 @@ export function posReducer(state: POSState, action: POSAction): POSState {
     case 'SELECT_LINE':
       return { ...state, selectedLineIndex: action.index, numpadInput: '' };
 
-    case 'SET_CUSTOMER':
-      return { ...state, customer: action.customer };
+    case 'SET_CUSTOMER': {
+      const items = action.priceGroupItems ?? state.activePriceGroupItems;
+      const newLines = items.length
+        ? state.cartLines.map((line) => {
+            const pgItem = items.find((i) => i.productId === line.productId);
+            if (!pgItem) return line;
+            return {
+              ...line,
+              price: pgItem.customPrice,
+              subtotal: computeSubtotal(pgItem.customPrice, line.qty, line.discount),
+            };
+          })
+        : action.customer === null
+        ? state.cartLines.map((line) => line) // keep prices as-is on deselect
+        : state.cartLines;
+      return { ...state, customer: action.customer, activePriceGroupItems: items, cartLines: newLines };
+    }
 
     case 'SET_ORDER_DISCOUNT':
       return {
@@ -281,6 +323,12 @@ export function posReducer(state: POSState, action: POSAction): POSState {
         ...state,
         heldOrders: state.heldOrders.filter((h) => h.id !== action.id),
       };
+
+    case 'SET_PROMOTIONS':
+      return { ...state, activePromotions: action.promotions };
+
+    case 'SET_PRICE_GROUP_ITEMS':
+      return { ...state, activePriceGroupItems: action.items };
 
     default:
       return state;

@@ -9,6 +9,7 @@ import {
 import { POSState, POSAction } from '@/types/POSContext';
 import { posReducer, initialPOSState } from './posReducer';
 import { paymentMethodRepository } from '@/repositories/paymentMethodRepository';
+import { promotionRepository } from '@/repositories/promotionRepository';
 
 interface POSContextValue {
   state: POSState;
@@ -23,6 +24,9 @@ export function POSProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     paymentMethodRepository.getAll().then((methods) => {
       dispatch({ type: 'SET_PAYMENT_METHODS', methods });
+    });
+    promotionRepository.getActive().then((promotions) => {
+      dispatch({ type: 'SET_PROMOTIONS', promotions });
     });
   }, []);
 

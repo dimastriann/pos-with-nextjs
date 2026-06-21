@@ -270,6 +270,9 @@ export class LocalStorageAdapter implements IBackendAdapter {
     seed(RESOURCE_KEYS.STOCK_ADJUSTMENTS, []);
     seed(RESOURCE_KEYS.PURCHASE_ORDERS, []);
     seed(RESOURCE_KEYS.PURCHASE_ORDER_LINES, []);
+    seed(RESOURCE_KEYS.PROMOTIONS, []);
+    seed(RESOURCE_KEYS.PRICE_GROUPS, []);
+    seed(RESOURCE_KEYS.PRICE_GROUP_ITEMS, []);
   }
 
   private read<T>(key: string): T[] {

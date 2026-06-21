@@ -2,6 +2,7 @@ import { CartLine, ActivePayment } from '@/models/CartModels';
 import { PosOrder, PosSession, PosShop } from '@/models/PosModels';
 import { Contact, PaymentMethod } from '@/models/MasterData';
 import { Product } from '@/models/Product';
+import { Promotion, PriceGroupItem } from '@/models/PromoModels';
 
 export type NumpadMode = 'qty' | 'disc' | 'price';
 export type POSScreen = 'pos_order' | 'payment' | 'receipt';
@@ -32,13 +33,15 @@ export interface POSState {
   error: string | null;
   lastCompletedOrder: PosOrder | null;
   heldOrders: HeldOrder[];
+  activePromotions: Promotion[];
+  activePriceGroupItems: PriceGroupItem[];
 }
 
 export type POSAction =
   | { type: 'ADD_PRODUCT'; product: Product }
   | { type: 'REMOVE_LINE'; index: number }
   | { type: 'SELECT_LINE'; index: number | null }
-  | { type: 'SET_CUSTOMER'; customer: Contact | null }
+  | { type: 'SET_CUSTOMER'; customer: Contact | null; priceGroupItems?: PriceGroupItem[] }
   | { type: 'SET_ORDER_DISCOUNT'; discount: number }
   | { type: 'SET_ORDER_NOTES'; notes: string }
   | { type: 'CLEAR_ORDER' }
@@ -57,4 +60,6 @@ export type POSAction =
   | { type: 'SET_ERROR'; error: string | null }
   | { type: 'HOLD_ORDER' }
   | { type: 'RECALL_ORDER'; id: string }
-  | { type: 'DISCARD_HELD'; id: string };
+  | { type: 'DISCARD_HELD'; id: string }
+  | { type: 'SET_PROMOTIONS'; promotions: Promotion[] }
+  | { type: 'SET_PRICE_GROUP_ITEMS'; items: PriceGroupItem[] };
