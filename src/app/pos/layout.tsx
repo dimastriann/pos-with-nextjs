@@ -26,6 +26,16 @@ function POSHeader() {
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => router.push(`/pos/xreport?sessionId=${state.activeSession!.id}`)}
+            className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground text-xs"
+          >
+            X-Report
+          </Button>
+        )}
+        {state.activeSession && (
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleEndDay}
             disabled={state.isLoading}
             className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground text-xs"

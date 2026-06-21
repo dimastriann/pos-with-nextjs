@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Percent,
   Layers,
+  History,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
@@ -86,6 +87,7 @@ const MENU_ITEMS: MenuItem[] = [
       { label: 'Stock Adjustments', href: '/admin/stock-adjustments', icon: ArrowUpDown },
       { label: 'Purchase Orders', href: '/admin/purchase-orders', icon: ClipboardList },
       { label: 'Low Stock Alerts', href: '/admin/low-stock', icon: AlertTriangle },
+      { label: 'Stock Movements', href: '/admin/stock-movements', icon: History },
     ],
   },
   {
